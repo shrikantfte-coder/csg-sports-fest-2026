@@ -1,13 +1,61 @@
 {
- "v": 1,
- "note": "Shared organiser login for admin.html. Encrypted with the admin password. Change it from the admin page, not by hand.",
- "kdf": {
-  "name": "PBKDF2",
-  "hash": "SHA-256",
-  "iterations": 310000,
-  "salt": "IKXRkBq8qcZl6YY0ZftNog=="
+ "v": 2,
+ "note": "Organiser logins for admin.html. Each login is encrypted with its own password. Change them from the admin page, not by hand.",
+ "vault": null,
+ "users": {
+  "admin": {
+   "role": "admin",
+   "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 310000,
+    "salt": "Tr3ImS7Ysx2U+sTWeBkvWw=="
+   },
+   "iv": "GJltWfUKIL3DlWDj",
+   "data": "WF1IPWzOFv00zOwY/LHotZq0eSZOsuIw/PoId8y/cD61vWhe0RpQS6y6Co5dwUzB1+KdQPcJOnGr4ph3+XCLcM0fNqoizbj1ZF2zZJjS/eDns8YBA1fUiVK6B1s6Ia8="
+  },
+  "carrom": {
+   "role": "sport",
+   "sports": [
+    "carrom"
+   ],
+   "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 310000,
+    "salt": "Wcp5ywq/ywvh1+lbWTPUUQ=="
+   },
+   "iv": "7BZR6hgarxrZVkg0",
+   "data": "n14+rGjEHvY64ts35ZlE4uyKHlS6wk3TOZIsKAcyQkH1GZyvP4pK4AySc7n8InMaqEKlfgWcJE3EYKvx26LrucU13HnP1yopZOprprzLts4+0z3Sbyusp19sSkZVOh4Cjz2JMv6nLQ=="
+  },
+  "tt": {
+   "role": "sport",
+   "sports": [
+    "tt"
+   ],
+   "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 310000,
+    "salt": "wybXRW4guTLNOHdC4bMQ6A=="
+   },
+   "iv": "uILTKnub+RxGGCOZ",
+   "data": "++9k2mJxpfLTm5pf5gjqYHP8g/sOYy5yq4h+ka7i7BbLfxXPk7d79248SuRo0pucbT8CmvVg/NQnrD4b6HhOEaZwdgxOF81GV/XxHawcZiBDr88Gt0+rs++9dMVI+snlu6oN"
+  },
+  "chess": {
+   "role": "sport",
+   "sports": [
+    "chess"
+   ],
+   "kdf": {
+    "name": "PBKDF2",
+    "hash": "SHA-256",
+    "iterations": 310000,
+    "salt": "KaTZ19/wXY42d5aDrmqYrw=="
+   },
+   "iv": "+HGJCMoc03Tdi7+b",
+   "data": "7INYigYo/fYlF5hZI9J3jU/mB91sqcD6LGIiZZCp9SAu8YGRIAZ7YCq6y2W3k/jTOpdsAXY+JsPSmPDgkMtts7gHfkDbVgv6ZL9HE+657E9t2YyuyZKIzOh2rKnzPRQ/hYwk9xcV"
+  }
  },
- "iv": "6b6FVPScUIODV1q6",
- "data": "2pqvvG9Cnio9vkLLJaOVJFgvwyrD9bysSQZY5mJ5I38mHhlX",
- "updated": "2026-11-23T08:01:17.939Z"
+ "updated": "2026-11-23T15:22:18.026Z"
 }

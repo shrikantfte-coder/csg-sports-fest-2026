@@ -49,6 +49,9 @@ h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.05;text-wrap:b
 .search{position:relative;padding-bottom:12px}
 .search input{width:100%;font:inherit;font-size:1rem;padding:11px 40px 11px 40px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);color:var(--fg)}
 .search input:focus{outline:none;border-color:var(--fg);background:var(--surface)}
+/* The hint is long, so it shrinks a little on narrow phones to stay fully visible. */
+.search input:placeholder-shown{padding-right:12px}
+.search input::placeholder{color:var(--muted);opacity:1;font-size:clamp(10px,calc((100vw - 92px) / 21.7),16px)}
 .search svg{position:absolute;left:12px;top:12px;width:18px;height:18px;color:var(--muted)}
 .search button{position:absolute;right:6px;top:5px;border:0;background:none;color:var(--muted);font:inherit;font-size:1.3rem;padding:4px 10px;cursor:pointer}
 
@@ -187,7 +190,7 @@ table.st tr.q td{background:var(--win-bg)}
     <nav class="tabs" id="tabs" aria-label="Sports"></nav>
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="text" enterkeyhint="search" autocomplete="off" placeholder="Search your name or team" aria-label="Search player or team name">
+      <input id="q" type="text" enterkeyhint="search" autocomplete="off" placeholder="Search for your sports by name or team name here" aria-label="Search for your sports by name or team name">
       <button id="clear" type="button" aria-label="Clear search" hidden>×</button>
     </div>
   </div>

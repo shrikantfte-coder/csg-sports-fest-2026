@@ -115,6 +115,17 @@ tr.changed td{background:var(--changed)}
 .status.ok{color:var(--ok)} .status.bad{color:var(--bad)} .status.warn{color:var(--warn)}
 ol.steps,ul.list{margin:0;padding-left:1.2em;display:grid;gap:4px}
 
+/* organiser logins */
+.banner{background:var(--changed);border-radius:12px;padding:12px 14px;font-size:.93rem}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;cursor:pointer}
+.slogin{border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}
+.slogin .on,.slogin .off{font-size:.78rem;font-weight:700;padding:3px 9px;border-radius:999px}
+.slogin .on{background:var(--ok-bg);color:var(--ok)}
+.slogin .off{background:var(--sunk);color:var(--muted)}
+.slpass{flex:1 1 170px;max-width:240px;min-width:0;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk)}
+.card code,.banner code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:var(--sunk);padding:1px 6px;border-radius:6px}
+details summary{cursor:pointer}
+
 /* print */
 #print{display:none}
 @media print{
@@ -183,13 +194,15 @@ const PAGES = [
   {id:"cricket", name:"Cricket", hash:"#cricket"},
   {id:"volleyball", name:"Volleyball", hash:"#volleyball"},
 ];
+/* login: the default username for that sport's organiser. teamKeys: the parts of data.json that sport's login may change besides its fixtures. */
 const SPORTS = [
-  {list:"tt", name:"Table Tennis", p:"Player", draw:""},
-  {list:"carrom", name:"Carrom", p:"Team", draw:""},
-  {list:"chess", name:"Chess", p:"Player", draw:"Draw"},
-  {list:"cricketFixtures", name:"Cricket", p:"Team", draw:"Tie"},
-  {list:"volleyballFixtures", name:"Volleyball", p:"Team", draw:""},
+  {list:"tt", name:"Table Tennis", p:"Player", draw:"", login:"tt", teamKeys:[], teamTab:null},
+  {list:"carrom", name:"Carrom", p:"Team", draw:"", login:"carrom", teamKeys:["carromTeams"], teamTab:"carrom"},
+  {list:"chess", name:"Chess", p:"Player", draw:"Draw", login:"chess", teamKeys:["chessGroups","chessPlays"], teamTab:"chess"},
+  {list:"cricketFixtures", name:"Cricket", p:"Team", draw:"Tie", login:"cricket", teamKeys:["cricket"], teamTab:"cricket"},
+  {list:"volleyballFixtures", name:"Volleyball", p:"Team", draw:"", login:"volleyball", teamKeys:["volleyball"], teamTab:"volleyball"},
 ];
+const TEAM_TABS = [["cricket","Cricket"],["volleyball","Volleyball"],["carrom","Carrom"],["chess","Chess groups"]];
 const sportOf = list => SPORTS.find(s=>s.list===list);
 const WIN = list => { const s = sportOf(list); return [["","Not played"],["a",s.p+" 1"],["b",s.p+" 2"]].concat(s.draw?[["draw",s.draw]]:[]); };
 const FIX = {
@@ -215,29 +228,57 @@ const ser = x => JSON.stringify(x ?? null, rep);
 
 let D = null, ORIGINAL = "", SHA = null, SESSION = null;
 let tab = "winners", fixSport = "tt", teamSport = "cricket", filterText = "", winSport = null, winView = null;
+let justSaved = {};   // sport list -> {user, pass} shown once after the admin sets a sport login
 
-/* ---------- encryption for the shared login ----------
-   admin-config.json holds {token} encrypted with AES-GCM. The key comes from the password (PBKDF2, 310,000 rounds)
-   and the username is bound in as extra data, so only the right username + password can open it. */
+/* ---------- who can do what ----------
+   The admin login can change everything. A sport login only sees and publishes its own sport.
+   These limits are applied by this page; they keep organisers from changing other sports by mistake. */
+const isAdmin = () => !SESSION || SESSION.role !== "sport";
+const myLists = () => isAdmin() ? SPORTS.map(s=>s.list) : (SESSION.sports||[]).filter(l=>sportOf(l));
+const mySports = () => SPORTS.filter(s=>myLists().includes(s.list));
+const myKeys = () => isAdmin() ? null : new Set(mySports().flatMap(s=>[s.list, ...s.teamKeys]));
+const myTeamTabs = () => isAdmin() ? TEAM_TABS : TEAM_TABS.filter(([k])=>mySports().some(s=>s.teamTab===k));
+const pick = (obj, keys) => keys ? Object.fromEntries(Object.entries(obj).filter(([k])=>keys.has(k))) : obj;
+const draftKey = () => "draft3:" + (SESSION?.user || "");
+
+/* ---------- encryption for the organiser logins ----------
+   admin-config.json (version 2) holds:
+   - vault: the GitHub key, encrypted with a random fest key K.
+   - users: one entry per login. Each holds K, the role and the sport, encrypted with that login's password
+     (PBKDF2, 310,000 rounds) with the username bound in, so only the right username + password opens it.
+   Version 1 (a single admin entry holding the GitHub key) is still read, and is upgraded on the next save. */
 const te = new TextEncoder(), td = new TextDecoder();
 const toB64 = bytes => { let s=""; bytes.forEach(b=>s+=String.fromCharCode(b)); return btoa(s); };
 const fromB64 = s => Uint8Array.from(atob(String(s).replace(/\s/g,"")), c=>c.charCodeAt(0));
+const rand = n => crypto.getRandomValues(new Uint8Array(n));
 const userBytes = u => te.encode(String(u).trim().toLowerCase());
 async function deriveKey(pass, salt, iterations){
   const base = await crypto.subtle.importKey("raw", te.encode(pass), "PBKDF2", false, ["deriveKey"]);
   return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations, hash:"SHA-256"}, base, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
 }
-async function unlock(cfg, user, pass){
-  const key = await deriveKey(pass, fromB64(cfg.kdf.salt), cfg.kdf.iterations);
-  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:fromB64(cfg.iv), additionalData:userBytes(user)}, key, fromB64(cfg.data));
+async function unlock(entry, user, pass){
+  const key = await deriveKey(pass, fromB64(entry.kdf.salt), entry.kdf.iterations);
+  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:fromB64(entry.iv), additionalData:userBytes(user)}, key, fromB64(entry.data));
   return JSON.parse(td.decode(plain));
 }
-async function lock(payload, user, pass){
-  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), iterations = 310000;
+async function wrapFor(user, pass, inner){
+  const salt = rand(16), iv = rand(12), iterations = 310000;
   const key = await deriveKey(pass, salt, iterations);
-  const ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv, additionalData:userBytes(user)}, key, te.encode(JSON.stringify(payload))));
-  return {v:1, note:"Shared organiser login for admin.html. Encrypted with the admin password. Change it from the admin page, not by hand.", kdf:{name:"PBKDF2", hash:"SHA-256", iterations, salt:toB64(salt)}, iv:toB64(iv), data:toB64(ct), updated:new Date().toISOString()};
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv, additionalData:userBytes(user)}, key, te.encode(JSON.stringify(inner))));
+  return {kdf:{name:"PBKDF2", hash:"SHA-256", iterations, salt:toB64(salt)}, iv:toB64(iv), data:toB64(ct)};
 }
+const festKey = kB64 => crypto.subtle.importKey("raw", fromB64(kB64), {name:"AES-GCM"}, false, ["encrypt","decrypt"]);
+async function sealVault(kB64, payload){
+  const iv = rand(12);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv, additionalData:te.encode("vault")}, await festKey(kB64), te.encode(JSON.stringify(payload))));
+  return {iv:toB64(iv), data:toB64(ct)};
+}
+async function openVault(kB64, vault){
+  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:fromB64(vault.iv), additionalData:te.encode("vault")}, await festKey(kB64), fromB64(vault.data));
+  return JSON.parse(td.decode(plain));
+}
+const newConfig = () => ({v:2, note:"Organiser logins for admin.html. Each login is encrypted with its own password. Change them from the admin page, not by hand.", vault:null, users:{}, updated:""});
+const loginList = cfg => cfg.v===2 ? Object.entries(cfg.users||{}).map(([u,e])=>({user:u, role:e.role||"sport", sports:e.sports||[]})) : [];
 
 /* ---------- GitHub ---------- */
 const utf8ToB64 = s => toB64(te.encode(s));
@@ -257,10 +298,11 @@ async function ghPut(path, text, sha, token, message){
   return (await r.json()).content.sha;
 }
 function ghError(e, shared){
-  if(e.status===401) return shared ? "The saved GitHub key no longer works (it may have expired). The owner can add a new one under Login & settings." : "GitHub did not accept the token. Check you copied all of it and that it has not expired.";
+  if(e.pw) return e.message;
+  if(e.status===401) return shared ? "The shared GitHub key no longer works (it may have expired). The admin can add a new one under Login & settings." : "GitHub did not accept the token. Check you copied all of it and that it has not expired.";
   if(e.status===403 || e.status===404) return `This GitHub key cannot write to the repository. It needs Contents: Read and write on ${REPO}.`;
-  if(e.status===409 || e.status===422) return "Someone published at the same moment. Press Publish again.";
-  return `Could not reach GitHub (${e.message}). Check your connection and try again.`;
+  if(e.status===409 || e.status===422) return "Someone saved at the same moment. Try again.";
+  return e.message && !e.status ? e.message : `Could not reach GitHub (${e.message}). Check your connection and try again.`;
 }
 async function readConfig(token){
   try{ const g = await ghGet(CONFIG, token); if(g) return {cfg:JSON.parse(g.text), sha:g.sha}; }catch(_){}
@@ -268,18 +310,51 @@ async function readConfig(token){
   if(!r.ok) throw new Error("The login settings file is missing.");
   return {cfg:await r.json(), sha:null};
 }
-const tokenNow = () => SESSION?.token || ($("#token")?.value.trim() || store.get("ghtoken") || null);
+const tokenNow = () => SESSION?.token || (isAdmin() ? ($("#token")?.value.trim() || store.get("ghtoken") || null) : null);
+
+/* Opens the latest login settings for an admin change: checks the password and returns a version 2 config. */
+async function openForEdit(token, pass){
+  const g = await ghGet(CONFIG, token);
+  let cfg = g ? JSON.parse(g.text) : (await readConfig()).cfg, k;
+  const wrong = () => { const e = new Error("That password is not right."); e.pw = true; return e; };
+  if(cfg.v===2){
+    const entry = cfg.users?.[SESSION.user];
+    if(!entry){ const e = new Error("Your login was changed on another device. Log out and log in again."); e.pw = true; throw e; }
+    try{ k = (await unlock(entry, SESSION.user, pass)).k; }catch(_){ throw wrong(); }
+  } else {
+    try{ await unlock(cfg, SESSION.user, pass); }catch(_){ throw wrong(); }
+    k = toB64(rand(32));
+    cfg = newConfig();
+    cfg.users[SESSION.user] = {role:"admin", ...(await wrapFor(SESSION.user, pass, {k, role:"admin", sports:[]}))};
+    if(SESSION.token) cfg.vault = await sealVault(k, {token:SESSION.token});
+  }
+  return {cfg, sha:g?.sha, k};
+}
+async function saveConfig(cfg, sha, token, message){
+  cfg.updated = new Date().toISOString();
+  await ghPut(CONFIG, JSON.stringify(cfg,null,1)+"\n", sha, token, message);
+  SESSION.logins = loginList(cfg); SESSION.vault = !!cfg.vault; sess.set(SESSION);
+}
 
 /* ---------- login ---------- */
 $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const user = $("#user").value.trim(), pass = $("#pass").value, btn = $("#loginBtn");
+  const user = $("#user").value.trim().toLowerCase(), pass = $("#pass").value, btn = $("#loginBtn");
   btn.disabled = true; btn.textContent = "Checking…"; $("#loginErr").textContent = "";
   try{
     const {cfg} = await readConfig();
-    let payload;
-    try{ payload = await unlock(cfg, user, pass); }catch(_){ throw new Error("Wrong username or password."); }
-    SESSION = {user, token:payload.token || null}; sess.set(SESSION);
+    const wrong = new Error("Wrong username or password.");
+    if(cfg.v===2){
+      const entry = cfg.users?.[user]; if(!entry) throw wrong;
+      let inner; try{ inner = await unlock(entry, user, pass); }catch(_){ throw wrong; }
+      let token = null;
+      if(cfg.vault){ try{ token = (await openVault(inner.k, cfg.vault)).token || null; }catch(_){} }
+      SESSION = {user, role:inner.role==="admin"?"admin":"sport", sports:inner.sports||[], token, k:inner.k, logins:loginList(cfg), vault:!!cfg.vault};
+    } else {
+      let payload; try{ payload = await unlock(cfg, user, pass); }catch(_){ throw wrong; }
+      SESSION = {user, role:"admin", sports:[], token:payload.token||null, k:null, logins:[{user, role:"admin", sports:[]}], vault:!!payload.token};
+    }
+    sess.set(SESSION);
     $("#pass").value = "";
     start();
   }catch(err){ $("#loginErr").textContent = err.message; }
@@ -310,26 +385,29 @@ async function loadData(){
   if(text===null){ const r = await fetch(DATA+"?v="+Date.now(), {cache:"no-store"}); text = await r.text(); SHA = null; }
   ORIGINAL = text;
   const latest = freshLists(JSON.parse(text));
-  let draft = null; try{ draft = JSON.parse(store.get("draft2")||"null"); }catch(_){}
+  let raw = store.get(draftKey());
+  if(!raw && isAdmin() && (raw = store.get("draft2"))){ store.set(draftKey(), raw); store.set("draft2", null); }   // drafts saved before sport logins existed
+  let draft = null; try{ draft = JSON.parse(raw||"null"); }catch(_){}
   D = draft ? freshLists(merge(freshLists(JSON.parse(draft.base)), freshLists(JSON.parse(draft.data)), latest).out) : latest;
 }
-const isDirty = () => ser({...D, updated:0}) !== ser({...freshLists(JSON.parse(ORIGINAL)), updated:0});
+const isDirty = () => { const k = myKeys(); return ser({...pick(D,k), updated:0}) !== ser({...pick(freshLists(JSON.parse(ORIGINAL)),k), updated:0}); };
 function rowsChanged(k, o){
   const a = o[k]||[], b = D[k]||[]; let changed = 0, wins = 0;
   for(let i=0;i<Math.max(a.length,b.length);i++){ if(ser(a[i])!==ser(b[i])){ changed++; if((a[i]?.winner||"")!==(b[i]?.winner||"")) wins++; } }
   return {changed, wins};
 }
 const TEAM_KEYS = {cricket:"Cricket teams", volleyball:"Volleyball teams", carromTeams:"Carrom teams", chessGroups:"Chess groups", chessPlays:"Chess groups", festDates:"Fest dates"};
+const allowed = k => { const s = myKeys(); return !s || s.has(k); };
 function changeCount(){
   const o = freshLists(JSON.parse(ORIGINAL)); let n = 0;
-  Fest.LISTS.forEach(k=>n += rowsChanged(k,o).changed);
-  Object.keys(TEAM_KEYS).forEach(k=>{ if(ser(o[k])!==ser(D[k])) n++; });
+  mySports().forEach(s=>n += rowsChanged(s.list,o).changed);
+  Object.keys(TEAM_KEYS).forEach(k=>{ if(allowed(k) && ser(o[k])!==ser(D[k])) n++; });
   return n;
 }
 function changeSummary(){
   const o = freshLists(JSON.parse(ORIGINAL)), out = [];
-  SPORTS.forEach(s=>{ const {changed,wins} = rowsChanged(s.list,o); if(changed) out.push(`${s.name}: ${changed} ${changed===1?"match":"matches"} changed${wins?`, including ${wins} ${wins===1?"winner":"winners"}`:""}`); });
-  Object.keys(TEAM_KEYS).forEach(k=>{ if(ser(o[k])!==ser(D[k])) out.push(`${TEAM_KEYS[k]} edited`); });
+  mySports().forEach(s=>{ const {changed,wins} = rowsChanged(s.list,o); if(changed) out.push(`${s.name}: ${changed} ${changed===1?"match":"matches"} changed${wins?`, including ${wins} ${wins===1?"winner":"winners"}`:""}`); });
+  Object.keys(TEAM_KEYS).forEach(k=>{ if(allowed(k) && ser(o[k])!==ser(D[k])) out.push(`${TEAM_KEYS[k]} edited`); });
   return [...new Set(out)];
 }
 function markDirty(){
@@ -337,7 +415,7 @@ function markDirty(){
   $("#dirty").hidden = !dirty; $("#dirty").textContent = "Unpublished changes";
   $("#pubbar").hidden = !dirty || tab==="publish";
   $("#pubbarText").textContent = dirty ? `${n} unpublished ${n===1?"change":"changes"}` : "";
-  store.set("draft2", dirty ? JSON.stringify({base:ORIGINAL, data:JSON.stringify(D)}) : null);
+  store.set(draftKey(), dirty ? JSON.stringify({base:ORIGINAL, data:JSON.stringify(D)}) : null);
   return dirty;
 }
 
@@ -346,6 +424,7 @@ async function publish(statusEl, btn){
   const token = tokenNow(), shared = !!SESSION?.token;
   const say = (cls, msg) => { statusEl.className = "status "+cls; statusEl.textContent = msg; };
   if(!token){
+    if(!isAdmin()){ say("bad","Publishing isn't switched on for sport logins yet. Ask the admin to log in once and share the GitHub key. Your changes are kept on this phone."); return; }
     tab = "publish"; render();
     const s = $("#pubStatus"); s.className = "status bad"; s.textContent = "Paste a GitHub token below to publish. The steps are underneath.";
     return;
@@ -355,16 +434,15 @@ async function publish(statusEl, btn){
   say("", "Publishing…");
   try{
     const cur = await ghGet(DATA, token);
-    let toSave = D, conflicts = [];
-    if(cur && cur.sha !== SHA){
-      const m = merge(freshLists(JSON.parse(ORIGINAL)), D, freshLists(JSON.parse(cur.text)));
-      toSave = m.out; conflicts = m.conflicts;
-    }
+    const base = freshLists(JSON.parse(ORIGINAL)), theirs = cur ? freshLists(JSON.parse(cur.text)) : base;
+    const m = merge(base, D, theirs), toSave = m.out, keys = myKeys();
+    if(keys) Object.keys(toSave).forEach(k=>{ if(k!=="updated" && !keys.has(k)) toSave[k] = theirs[k]; });
     const body = JSON.stringify({...toSave, updated:new Date().toISOString()}, rep, 1) + "\n";
-    SHA = await ghPut(DATA, body, cur?.sha, token, "Update fixtures and results from admin page");
-    ORIGINAL = body; D = freshLists(JSON.parse(body)); store.set("draft2", null);
+    SHA = await ghPut(DATA, body, cur?.sha, token, `Update ${isAdmin()?"fixtures and results":mySports().map(s=>s.name).join(", ")+" results"} from admin page (${SESSION.user})`);
+    ORIGINAL = body; D = freshLists(JSON.parse(body)); store.set(draftKey(), null);
     render();
-    const msg = conflicts.length ? `Published. Another organiser also changed ${conflicts.join(", ")}; your version was kept there.` : "Published. The site shows it within about 2 minutes.";
+    const conflicts = m.conflicts.filter(c => !keys || [...keys].some(k => c.startsWith(sportOf(k)?.name||k)));
+    const msg = conflicts.length ? `Published. Someone else also changed ${conflicts.join(", ")}; your version was kept there.` : "Published. The site shows it within about 2 minutes.";
     if(tab==="publish"){ const s = $("#pubStatus"); s.className = "status ok"; s.textContent = msg; }
     else { $("#pubbar").hidden = false; $("#pubbarText").textContent = ""; $("#publishNow").hidden = true; const s = $("#pubbarStatus"); s.className = "status ok"; s.textContent = msg;
       setTimeout(()=>{ $("#publishNow").hidden = false; s.textContent = ""; markDirty(); }, 5000); }
@@ -373,13 +451,19 @@ async function publish(statusEl, btn){
 }
 
 /* ---------- views ---------- */
+function banner(){
+  if(!isAdmin() || SESSION.vault) return "";
+  const sportLogins = (SESSION.logins||[]).filter(l=>l.role==="sport");
+  if(!sportLogins.length) return "";
+  return `<div class="banner"><b>Sport logins can't publish yet.</b> Share your GitHub key with them once: open <button class="linkbtn" data-tab="settings">Login &amp; settings</button>, type your password and tap <b>Save for all organisers</b>.</div>`;
+}
 function viewWinners(){
-  const L = Fest.resolve(D).lists;
+  const L = Fest.resolve(D).lists, sports = mySports();
   const real = list => L[list].filter(r => String(r.b||"").trim());
   const started = r => r.date < todayISO || (r.date===todayISO && toMin(r.start||r.time||r.slot) <= nowMin());
   const needs = r => r.date && started(r) && !Fest.hasWinner(r) && !Fest.isTBD(r.A) && !Fest.isTBD(r.B);
-  if(!winSport){
-    winSport = (SPORTS.find(s=>real(s.list).some(r=>r.date===todayISO)) || SPORTS.find(s=>real(s.list).some(needs)) || SPORTS[0]).list;
+  if(!winSport || !sports.some(s=>s.list===winSport)){
+    winSport = (sports.find(s=>real(s.list).some(r=>r.date===todayISO)) || sports.find(s=>real(s.list).some(needs)) || sports[0]).list;
   }
   const rows = real(winSport), pending = rows.filter(needs);
   const dates = [...new Set(rows.map(r=>r.date).filter(Boolean))].sort();
@@ -387,13 +471,13 @@ function viewWinners(){
     winView = dates.includes(todayISO) ? todayISO : pending.length ? "pending" : (dates.find(d=>d>todayISO) || "all");
   }
   const shown = winView==="pending" ? pending : winView==="all" ? rows : rows.filter(r=>r.date===winView);
-  const sel = SPORTS.map(s=>{ const n = real(s.list).filter(needs).length; return `<option value="${s.list}" ${s.list===winSport?"selected":""}>${s.name}${n?` (${n} waiting)`:""}</option>`; }).join("");
+  const sel = sports.length>1 ? `<label class="muted" for="winSport">Sport</label><select id="winSport" class="btn">${sports.map(s=>{ const n = real(s.list).filter(needs).length; return `<option value="${s.list}" ${s.list===winSport?"selected":""}>${s.name}${n?` (${n} waiting)`:""}</option>`; }).join("")}</select>` : `<span class="muted">${esc(sports[0].name)}</span>`;
   const chips = [`<button class="chip" data-wv="pending" aria-pressed="${winView==="pending"}">Needs result<small>${pending.length}</small></button>`,
     ...dates.map(d=>`<button class="chip" data-wv="${d}" aria-pressed="${winView===d}">${d===todayISO?"Today":fmtDay(d)}</button>`),
     `<button class="chip" data-wv="all" aria-pressed="${winView==="all"}">All</button>`].join("");
   const empty = !rows.length ? "No fixtures for this sport yet. Add them under Fixtures." : winView==="pending" ? "Nothing waiting. Every match played so far has a winner." : "No matches here.";
-  return `<div class="panel">
-    <div class="row"><h2>Update winners</h2><span class="grow"></span><label class="muted" for="winSport">Sport</label><select id="winSport" class="btn">${sel}</select></div>
+  return `<div class="panel">${banner()}
+    <div class="row"><h2>Update winners</h2><span class="grow"></span>${sel}</div>
     <p class="muted" style="margin:0">Tap the winner of each match. Tap it again to undo. Later rounds fill in by themselves, so “Winner of M01” turns into the team name. Nothing goes live until you press <b>Publish now</b>.</p>
     <div class="chips">${chips}</div>
     ${shown.length ? `<div class="wlist">${shown.map(r=>winCard(winSport,r)).join("")}</div>` : `<p class="note" style="margin:0">${empty}</p>`}
@@ -432,21 +516,26 @@ function cell(r,i,[k,label,type],list){
   return `<td class="${cls}"><input data-i="${i}" data-k="${k}" type="${type==="date"?"date":"text"}" value="${esc(v)}" aria-label="${label}"></td>`;
 }
 function viewFixtures(){
+  if(!myLists().includes(fixSport)) fixSport = myLists()[0];
   const S = FIX[fixSport], rows = D[fixSport], orig = freshLists(JSON.parse(ORIGINAL))[fixSport] || [];
   const f = filterText.toLowerCase();
   const body = rows.map((r,i)=>({r,i})).filter(({r})=>!f || Object.values(r).join(" ").toLowerCase().includes(f)).map(({r,i}) =>
     `<tr class="${ser(r)!==ser(orig[i])?"changed":""}">${S.cols.map(c=>cell(r,i,c,fixSport)).join("")}<td><button class="btn small danger" data-del="${i}" aria-label="Delete this match">✕</button></td></tr>`).join("");
-  const sel = SPORTS.map(s=>`<option value="${s.list}" ${s.list===fixSport?"selected":""}>${s.name}</option>`).join("");
-  return `<div class="panel">
+  const sports = mySports();
+  const sel = sports.length>1 ? `<select id="fixSport" class="btn" aria-label="Sport">${sports.map(s=>`<option value="${s.list}" ${s.list===fixSport?"selected":""}>${s.name}</option>`).join("")}</select>` : `<b>${esc(sports[0].name)}</b>`;
+  return `<div class="panel">${banner()}
     <div class="row"><h2>Fixtures</h2></div>
-    <div class="field" style="max-width:360px"><label for="festDatesInput">Fest dates shown at the top of the site</label><input id="festDatesInput" value="${esc(D.festDates||"")}" placeholder="23 Nov – 12 Dec 2026"></div>
-    <div class="row"><select id="fixSport" class="btn" aria-label="Sport">${sel}</select><input id="filter" class="btn" style="font-weight:400;min-width:200px" placeholder="Filter rows, e.g. a name or date" value="${esc(filterText)}" aria-label="Filter rows"><span class="muted">${rows.length} ${rows.length===1?"match":"matches"}</span><span class="grow"></span><button class="btn primary" id="addRow">+ Add match</button></div>
-    <p class="note" style="margin:0">Change dates, times and names here, or add new matches such as knock-outs and the cricket and volleyball fixtures. To point a match at an earlier result, type <b>Winner of M01</b> (use that match's number) and it fills in by itself. Winners are easier to set in <b>Update winners</b>.</p>
+    ${isAdmin()?`<div class="field" style="max-width:360px"><label for="festDatesInput">Fest dates shown at the top of the site</label><input id="festDatesInput" value="${esc(D.festDates||"")}" placeholder="23 Nov – 12 Dec 2026"></div>`:""}
+    <div class="row">${sel}<input id="filter" class="btn" style="font-weight:400;min-width:200px" placeholder="Filter rows, e.g. a name or date" value="${esc(filterText)}" aria-label="Filter rows"><span class="muted">${rows.length} ${rows.length===1?"match":"matches"}</span><span class="grow"></span><button class="btn primary" id="addRow">+ Add match</button></div>
+    <p class="note" style="margin:0">Change dates, times and names here, or add new matches such as knock-outs. To point a match at an earlier result, type <b>Winner of M01</b> (use that match's number) and it fills in by itself. Winners are easier to set in <b>Update winners</b>.</p>
     <div class="tbl"><table><thead><tr>${S.cols.map(c=>`<th>${c[1]}</th>`).join("")}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${S.cols.length+1}" class="muted" style="padding:16px">No matches yet. Use “Add match” to create the first one.</td></tr>`}</tbody></table></div>
   </div>`;
 }
 function viewTeams(){
-  const opts = [["cricket","Cricket"],["volleyball","Volleyball"],["carrom","Carrom"],["chess","Chess groups"]].map(([k,n])=>`<option value="${k}" ${k===teamSport?"selected":""}>${n}</option>`).join("");
+  const tabs = myTeamTabs();
+  if(!tabs.length) return `<div class="panel"><h2>Teams</h2><p class="note" style="margin:0">Table tennis players and pairs come from the fixtures. Edit them under <b>Fixtures</b>.</p></div>`;
+  if(!tabs.some(([k])=>k===teamSport)) teamSport = tabs[0][0];
+  const opts = tabs.length>1 ? `<select id="teamSport" class="btn" aria-label="Sport">${tabs.map(([k,n])=>`<option value="${k}" ${k===teamSport?"selected":""}>${n}</option>`).join("")}</select>` : `<b>${esc(tabs[0][1])}</b>`;
   let inner = "";
   if(teamSport==="cricket" || teamSport==="volleyball"){
     inner = `<div class="teams">${D[teamSport].map((t,i)=>`<div class="team"><label for="tn${i}">Team name</label><input id="tn${i}" data-team="${i}" value="${esc(t.name)}"><label for="tp${i}">Players, one per line${teamSport==="volleyball"?" (add “, Position” if known)":""}</label><textarea id="tp${i}" data-players="${i}">${esc(t.players.map(p=>Array.isArray(p)?(p[1]?p[0]+", "+p[1]:p[0]):p).join("\n"))}</textarea><button class="btn small danger" data-delteam="${i}">Remove team</button></div>`).join("")}</div>
@@ -457,7 +546,7 @@ function viewTeams(){
   } else {
     inner = `<div class="teams">${Object.entries(D.chessGroups).map(([g,ps])=>`<div class="team"><label for="pl${g}">Group ${g} · plays</label><input id="pl${g}" data-plays="${g}" value="${esc(D.chessPlays[g]||"")}"><label for="cg${g}">Players, one per line</label><textarea id="cg${g}" data-group="${g}">${esc(ps.join("\n"))}</textarea></div>`).join("")}</div>`;
   }
-  return `<div class="panel"><div class="row"><h2>Teams</h2><span class="grow"></span><select id="teamSport" class="btn" aria-label="Sport">${opts}</select></div>${inner}</div>`;
+  return `<div class="panel"><div class="row"><h2>Teams</h2><span class="grow"></span>${opts}</div>${inner}</div>`;
 }
 function tokenSteps(){
   return `<ol class="steps"><li>Sign in to GitHub as the repository owner.</li>
@@ -468,49 +557,76 @@ function tokenSteps(){
 }
 function viewPublish(){
   const dirty = isDirty(), list = dirty ? changeSummary() : [], shared = !!SESSION?.token, remembered = store.get("ghtoken");
-  return `<div class="panel" style="max-width:720px">
+  const how = shared ? `<p class="muted" style="margin:0">Publishing uses the shared organiser key, so no token is needed.</p>`
+    : !isAdmin() ? `<p class="status warn">Publishing isn't switched on for sport logins yet. Ask the admin to log in once and share the GitHub key. Your changes are kept on this phone until then.</p>`
+    : `<div class="field"><label for="token">GitHub token</label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(remembered||"")}">
+      <label class="muted" style="font-size:.9rem;font-weight:400"><input type="checkbox" id="remember" ${remembered?"checked":""}> Remember on this device</label></div>`;
+  return `<div class="panel" style="max-width:720px">${banner()}
     <h2>Publish</h2>
     <p class="status ${dirty?"warn":"ok"}">${dirty?"These changes are not on the site yet:":"No unpublished changes. The site matches what is saved."}</p>
     ${list.length?`<ul class="list">${list.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
-    ${shared ? `<p class="muted" style="margin:0">Publishing uses the shared organiser login, so no token is needed.</p>` : `
-    <div class="field"><label for="token">GitHub token</label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(remembered||"")}">
-      <label class="muted" style="font-size:.9rem;font-weight:400"><input type="checkbox" id="remember" ${remembered?"checked":""}> Remember on this device</label></div>`}
-    <div class="row"><button class="btn primary" id="publish" ${dirty?"":"disabled"}>Publish to the site</button><button class="btn" id="download">Download backup</button><button class="btn danger" id="discard" ${dirty?"":"disabled"}>Discard my changes</button></div>
+    ${how}
+    <div class="row"><button class="btn primary" id="publish" ${dirty&&(shared||isAdmin())?"":"disabled"}>Publish to the site</button><button class="btn" id="download">Download backup</button><button class="btn danger" id="discard" ${dirty?"":"disabled"}>Discard my changes</button></div>
     <p class="status" id="pubStatus" aria-live="polite"></p>
-    ${shared?"":`<div class="note"><b>Publishing isn't set up for the shared login yet.</b> The owner can do it once under <b>Login &amp; settings</b>, and after that nobody needs a token. Until then, paste a token here:${tokenSteps()}</div>`}
+    ${shared||!isAdmin()?"":`<div class="note"><b>Publishing isn't shared with the other logins yet.</b> Do it once under <b>Login &amp; settings</b>. Until then, paste a token here:${tokenSteps()}</div>`}
   </div>`;
 }
+/* Simple to type on a phone: an everyday word and four digits, e.g. "mango4821". */
+const WORDS = "mango tiger river lotus cloud pepper maple coral amber cedar comet ember falcon garnet harbor indigo jasmine lemon meadow olive panda quartz raven saffron tulip violet willow zebra acorn basil cactus eagle ginger hazel jade koala lilac mint orchid pebble rocket sunny topaz velvet walnut apple bamboo canyon daisy flint grape honey island jungle kite lantern marble nova ocean parrot".split(" ");
+const NO_KEY_YET = "You can change your password once the admin has switched on publishing for sport logins.";
+function suggestPass(){ const n = new Uint32Array(2); crypto.getRandomValues(n); return `${WORDS[n[0] % WORDS.length]}${1000 + n[1] % 9000}`; }
 function viewSettings(){
-  const shared = !!SESSION?.token;
+  const own = `<section class="card"><h3>${isAdmin()?"Change your username or password":"Change your password"}</h3>
+      <p class="muted" style="margin:0">${isAdmin()?"This changes the admin login. Sport logins keep working.":"Only your own login changes. Tell the admin if you forget it."}</p>
+      <div class="field"><label for="curPass">Current password</label><input id="curPass" type="password" autocomplete="current-password"></div>
+      ${isAdmin()?`<div class="field"><label for="newUser">New username</label><input id="newUser" autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(SESSION?.user||"")}"></div>`:""}
+      <div class="field"><label for="newPass">New password (at least ${isAdmin()?10:6} characters)</label><input id="newPass" type="password" autocomplete="new-password"></div>
+      <div class="field"><label for="newPass2">New password again</label><input id="newPass2" type="password" autocomplete="new-password"></div>
+      ${tokenNow()?"":isAdmin()?`<div class="field"><label for="chgToken">GitHub token (needed to save this change)</label><input id="chgToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>`:`<p class="status warn">${NO_KEY_YET}</p>`}
+      <div class="row"><button class="btn primary" id="changeLogin">Save</button></div>
+      <p class="status" id="chgStatus" aria-live="polite"></p>
+    </section>`;
+  if(!isAdmin()) return `<div class="panel"><h2>My login</h2><p class="muted" style="margin:0">You are signed in as <b>${esc(SESSION.user)}</b> and can update ${esc(mySports().map(s=>s.name).join(", "))}.</p>${own}</div>`;
+  const shared = !!SESSION.vault, remembered = store.get("ghtoken") || "";
+  const logins = SESSION.logins || [];
+  const rows = SPORTS.map(s=>{
+    const have = logins.find(l=>l.role==="sport" && l.sports.includes(s.list));
+    const saved = justSaved[s.list];
+    return `<div class="slogin"><div class="row"><b>${s.name}</b><span class="muted">username <code>${esc(have?have.user:s.login)}</code></span><span class="${have?"on":"off"}">${have?"Active":"Not set up"}</span></div>
+      ${saved?`<p class="status ok">Saved. Username <code>${esc(saved.user)}</code>, password <code>${esc(saved.pass)}</code> <button class="btn small" data-copy="Username: ${esc(saved.user)} / Password: ${esc(saved.pass)}">Copy</button></p>`:""}
+      <div class="row"><input class="slpass" id="sl-${s.list}" value="${esc(saved?saved.pass:(have?"":suggestPass()))}" placeholder="New password" aria-label="Password for ${s.name}" autocomplete="off">
+      <button class="btn small primary" data-slsave="${s.list}">${have?"Reset password":"Create login"}</button>${have?`<button class="btn small danger" data-slremove="${s.list}">Remove</button>`:""}</div></div>`;
+  }).join("");
   return `<div class="panel">
     <h2>Login &amp; settings</h2>
     <section class="card"><h3>Publishing for all organisers</h3>
-      <p class="status ${shared?"ok":"warn"}">${shared?"Set up. Anyone who logs in with the organiser username and password can publish.":"Not set up yet. Organisers can log in and make changes, but publishing needs a GitHub token."}</p>
-      <p class="muted" style="margin:0">${shared?"To replace the saved key (for example when it expires), paste a new token below.":"Do this once. The token is saved encrypted with the organiser password, so only people who know the password can use it."}</p>
-      <div class="field"><label for="setToken">GitHub token</label><input id="setToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>
-      <div class="field"><label for="setPass1">Your current password</label><input id="setPass1" type="password" autocomplete="current-password"></div>
+      <p class="status ${shared?"ok":"warn"}">${shared?"Set up. Every login (admin and sport logins) can publish.":"Not shared yet. Only you can publish, with your own token."}</p>
+      <p class="muted" style="margin:0">${shared?"To replace the key (for example when it expires), paste a new token below.":"Save your GitHub token here once. It is stored encrypted, and only people with a login can use it."}${remembered&&!shared?" The token saved on this device is already filled in.":""}</p>
+      <div class="field"><label for="setToken">GitHub token</label><input id="setToken" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(shared?"":remembered)}"></div>
+      <div class="field"><label for="setPass1">Your password</label><input id="setPass1" type="password" autocomplete="current-password"></div>
       <div class="row"><button class="btn primary" id="saveToken">Save for all organisers</button></div>
       <p class="status" id="tokStatus" aria-live="polite"></p>
-      <details><summary class="muted">How to create the token</summary>${tokenSteps()}</details>
+      <details><summary class="muted">How to create a token</summary>${tokenSteps()}</details>
     </section>
-    <section class="card"><h3>Change username or password</h3>
-      <p class="muted" style="margin:0">This changes the login for everyone. Share the new details with your organisers.</p>
-      <div class="field"><label for="curPass">Current password</label><input id="curPass" type="password" autocomplete="current-password"></div>
-      <div class="field"><label for="newUser">New username</label><input id="newUser" autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(SESSION?.user||"")}"></div>
-      <div class="field"><label for="newPass">New password (at least 10 characters)</label><input id="newPass" type="password" autocomplete="new-password"></div>
-      <div class="field"><label for="newPass2">New password again</label><input id="newPass2" type="password" autocomplete="new-password"></div>
-      ${shared?"":`<div class="field"><label for="chgToken">GitHub token (needed to save this change)</label><input id="chgToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>`}
-      <div class="row"><button class="btn primary" id="changeLogin">Save new login</button></div>
-      <p class="status" id="chgStatus" aria-live="polite"></p>
+    <section class="card"><h3>Sport logins</h3>
+      <p class="muted" style="margin:0">Each sport login can only update that sport's winners, fixtures and teams. They all use the same GitHub key, so no extra tokens are needed.</p>
+      <div class="field"><label for="slAdminPass">Your password (to confirm changes)</label><input id="slAdminPass" type="password" autocomplete="current-password"></div>
+      ${rows}
+      <p class="status" id="slStatus" aria-live="polite"></p>
     </section>
+    ${own}
   </div>`;
 }
 
 function render(){
+  const teamsTab = document.querySelector('.tab[data-tab="teams"]');
+  if(teamsTab) teamsTab.hidden = !myTeamTabs().length;
+  const setTab = document.querySelector('.tab[data-tab="settings"]');
+  if(setTab) setTab.textContent = isAdmin() ? "Login & settings" : "My login";
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===tab));
   const focusId = document.activeElement && document.activeElement.id;
   $("#main").innerHTML = ({winners:viewWinners, fixtures:viewFixtures, teams:viewTeams, qr:viewQR, publish:viewPublish, settings:viewSettings})[tab]();
-  $("#who").textContent = SESSION ? `Signed in as ${SESSION.user}` : "";
+  $("#who").textContent = SESSION ? `Signed in as ${SESSION.user}${isAdmin()?" (admin)":` · ${mySports().map(s=>s.name).join(", ")}`}` : "";
   markDirty();
   if(focusId==="filter"){ const f=$("#filter"); f.focus(); f.setSelectionRange(f.value.length,f.value.length); }
 }
@@ -519,35 +635,57 @@ function render(){
 async function saveSharedToken(){
   const tok = $("#setToken").value.trim(), pass = $("#setPass1").value, st = $("#tokStatus");
   const say = (c,m) => { st.className = "status "+c; st.textContent = m; };
-  if(!tok || !pass){ say("bad","Paste the token and type your current password."); return; }
+  if(!tok || !pass){ say("bad","Paste the token and type your password."); return; }
   say("","Saving…");
   try{
-    const g = await ghGet(CONFIG, tok);
-    const cfg = g ? JSON.parse(g.text) : (await readConfig()).cfg;
-    let payload; try{ payload = await unlock(cfg, SESSION.user, pass); }catch(_){ say("bad","That password is not right."); return; }
-    const next = await lock({...payload, v:1, token:tok}, SESSION.user, pass);
-    await ghPut(CONFIG, JSON.stringify(next,null,1)+"\n", g?.sha, tok, "Save publishing key for organiser login");
-    SESSION.token = tok; sess.set(SESSION);
-    render(); const s2 = $("#tokStatus"); s2.className = "status ok"; s2.textContent = "Saved. Organisers can now publish with just the username and password.";
+    const {cfg, sha, k} = await openForEdit(tok, pass);
+    cfg.vault = await sealVault(k, {token:tok});
+    await saveConfig(cfg, sha, tok, "Share publishing key with organiser logins");
+    SESSION.token = tok; SESSION.k = k; SESSION.vault = true; sess.set(SESSION);
+    render(); const s2 = $("#tokStatus"); s2.className = "status ok"; s2.textContent = "Saved. Every login can now publish.";
   }catch(e){ say("bad", ghError(e,false)); }
 }
 async function changeLogin(){
-  const cur = $("#curPass").value, nu = $("#newUser").value.trim(), np = $("#newPass").value, np2 = $("#newPass2").value, st = $("#chgStatus");
+  const cur = $("#curPass").value, nu = isAdmin() ? $("#newUser").value.trim().toLowerCase() : SESSION.user, np = $("#newPass").value, np2 = $("#newPass2").value, st = $("#chgStatus");
   const say = (c,m) => { st.className = "status "+c; st.textContent = m; };
-  if(!/^[\w.@-]{3,40}$/.test(nu)) return say("bad","Use 3 to 40 letters, numbers, dots, dashes or underscores for the username.");
-  if(np.length < 10) return say("bad","Use at least 10 characters for the new password.");
+  if(!/^[\w.@-]{2,40}$/.test(nu)) return say("bad","Use 2 to 40 letters, numbers, dots, dashes or underscores for the username.");
+  const min = isAdmin() ? 10 : 6;
+  if(np.length < min) return say("bad",`Use at least ${min} characters for the new password.`);
   if(np !== np2) return say("bad","The two new passwords are different.");
-  const tok = SESSION?.token || $("#chgToken")?.value.trim();
-  if(!tok) return say("bad","Paste a GitHub token to save this change.");
+  const tok = tokenNow() || $("#chgToken")?.value.trim();
+  if(!tok) return say("bad", isAdmin() ? "Paste a GitHub token to save this change." : NO_KEY_YET);
   say("","Saving…");
   try{
-    const g = await ghGet(CONFIG, tok);
-    const cfg = g ? JSON.parse(g.text) : (await readConfig()).cfg;
-    let payload; try{ payload = await unlock(cfg, SESSION.user, cur); }catch(_){ return say("bad","The current password is not right."); }
-    const next = await lock(payload, nu, np);
-    await ghPut(CONFIG, JSON.stringify(next,null,1)+"\n", g?.sha, tok, "Change organiser login");
-    SESSION.user = nu; sess.set(SESSION);
-    render(); const s2 = $("#chgStatus"); s2.className = "status ok"; s2.textContent = `Saved. The login is now “${nu}” with your new password.`;
+    const {cfg, sha, k} = await openForEdit(tok, cur);
+    if(nu!==SESSION.user && cfg.users[nu]) return say("bad","That username is already used by another login.");
+    const role = isAdmin() ? "admin" : "sport", sports = isAdmin() ? [] : SESSION.sports;
+    delete cfg.users[SESSION.user];
+    cfg.users[nu] = {role, ...(role==="sport"?{sports}:{}), ...(await wrapFor(nu, np, {k, role, sports}))};
+    await saveConfig(cfg, sha, tok, `Change login for ${nu}`);
+    SESSION.user = nu; SESSION.k = k; sess.set(SESSION);
+    render(); const s2 = $("#chgStatus"); s2.className = "status ok"; s2.textContent = isAdmin() ? `Saved. Your login is now “${nu}” with the new password.` : "Saved. Use the new password next time you log in.";
+  }catch(e){ say("bad", ghError(e, !!SESSION?.token)); }
+}
+async function setSportLogin(list, remove){
+  const s = sportOf(list), st = $("#slStatus"), pass = $("#slAdminPass").value;
+  const say = (c,m) => { st.className = "status "+c; st.textContent = m; };
+  const tok = tokenNow();
+  if(!tok) return say("bad","Save your GitHub token under “Publishing for all organisers” first.");
+  if(!pass) return say("bad","Type your own password at the top of this box to confirm.");
+  const pw = remove ? "" : ($(`#sl-${list}`).value || "").trim();
+  if(!remove && pw.length < 6) return say("bad",`Use at least 6 characters for the ${s.name} password.`);
+  say("", remove ? "Removing…" : "Saving…");
+  try{
+    const {cfg, sha, k} = await openForEdit(tok, pass);
+    const existing = Object.keys(cfg.users).filter(u => cfg.users[u].role==="sport" && (cfg.users[u].sports||[]).includes(list));
+    const uname = existing[0] || s.login;
+    if(!remove && cfg.users[uname] && cfg.users[uname].role==="admin") return say("bad",`The username “${uname}” is the admin login. Rename the admin first.`);
+    existing.forEach(u => delete cfg.users[u]);
+    if(!remove) cfg.users[uname] = {role:"sport", sports:[list], ...(await wrapFor(uname, pw, {k, role:"sport", sports:[list]}))};
+    await saveConfig(cfg, sha, tok, remove ? `Remove ${s.name} login` : `Set ${s.name} login`);
+    SESSION.k = k; sess.set(SESSION);
+    if(remove) delete justSaved[list]; else justSaved[list] = {user:uname, pass:pw};
+    render(); $("#slAdminPass").value = pass; const s2 = $("#slStatus"); s2.className = "status ok"; s2.textContent = remove ? `${s.name} login removed.` : `${s.name} login saved. Share the username and password with that sport's organiser.`;
   }catch(e){ say("bad", ghError(e, !!SESSION?.token)); }
 }
 
@@ -561,7 +699,7 @@ document.addEventListener("click", async e => {
     render(); return;
   }
   if(t.dataset.wv){ winView = t.dataset.wv; render(); return; }
-  if(t.dataset.copy){ try{ await navigator.clipboard.writeText(t.dataset.copy); t.textContent="Copied"; }catch(_){ t.textContent="Copy failed"; } setTimeout(()=>t.textContent="Copy link",1500); return; }
+  if(t.dataset.copy){ const label = t.textContent; try{ await navigator.clipboard.writeText(t.dataset.copy); t.textContent="Copied"; }catch(_){ t.textContent="Copy failed"; } setTimeout(()=>t.textContent=label,1500); return; }
   if(t.dataset.print==="sheet"){ printSheet(); return; }
   if(t.dataset.poster){ printPoster(t.dataset.poster); return; }
   if(t.dataset.del){ D[fixSport].splice(+t.dataset.del,1); render(); return; }
@@ -580,17 +718,24 @@ document.addEventListener("click", async e => {
   if(t.id==="download"){ const blob = new Blob([JSON.stringify({...D, updated:new Date().toISOString()},rep,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="data.json"; a.click(); return; }
   if(t.id==="discard"){
     if(t.dataset.sure!=="1"){ t.dataset.sure="1"; t.textContent="Click again to discard"; return; }
-    store.set("draft2",null); D = freshLists(JSON.parse(ORIGINAL)); render(); return;
+    store.set(draftKey(),null); D = freshLists(JSON.parse(ORIGINAL)); render(); return;
   }
   if(t.id==="publish"){ publish($("#pubStatus"), t); return; }
   if(t.id==="publishNow"){ publish($("#pubbarStatus"), t); return; }
   if(t.id==="saveToken"){ t.disabled = true; await saveSharedToken(); t.disabled = false; return; }
   if(t.id==="changeLogin"){ t.disabled = true; await changeLogin(); t.disabled = false; return; }
+  if(t.dataset.slsave || t.dataset.slremove){
+    if(t.dataset.slremove && t.dataset.sure!=="1"){ t.dataset.sure="1"; t.textContent="Tap again to remove"; return; }
+    document.querySelectorAll("[data-slsave],[data-slremove]").forEach(b=>b.disabled=true);
+    await setSportLogin(t.dataset.slsave || t.dataset.slremove, !!t.dataset.slremove);
+    document.querySelectorAll("[data-slsave],[data-slremove]").forEach(b=>b.disabled=false);
+    return;
+  }
 });
 document.addEventListener("input", e => {
   const el = e.target, ds = el.dataset;
   if(el.id==="filter"){ filterText = el.value; render(); return; }
-  if(el.id==="festDatesInput"){ D.festDates = el.value; markDirty(); return; }
+  if(el.id==="festDatesInput" && isAdmin()){ D.festDates = el.value; markDirty(); return; }
   if(ds.score!==undefined){ const row = D[winSport][+ds.score]; if(el.value.trim()) row.result = el.value; else delete row.result; markDirty(); return; }
   if(ds.i!==undefined && ds.k){ const row = D[fixSport][+ds.i]; if((ds.k==="winner"||ds.k==="result") && !el.value) delete row[ds.k]; else row[ds.k] = el.value; el.closest("tr").classList.add("changed"); markDirty(); return; }
   if(ds.team!==undefined){ D[teamSport][+ds.team].name = el.value; markDirty(); return; }
@@ -626,6 +771,8 @@ function whenImages(cb){
 }
 
 async function start(){
+  if(!SESSION.role) SESSION.role = "admin";
+  if(!isAdmin()){ const s = mySports()[0]; if(!s){ sess.set(null); location.reload(); return; } fixSport = s.list; winSport = s.list; if(s.teamTab) teamSport = s.teamTab; }
   $("#login").hidden = true; $("#app").hidden = false;
   $("#main").innerHTML = `<p class="muted">Loading…</p>`;
   try{ await loadData(); }catch(_){ $("#main").innerHTML = `<p class="status bad">Could not load the fest data. Check your connection and reload.</p>`; return; }
