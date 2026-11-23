@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Sports Fest Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one column admin console with four tabs; wide edit tables scroll inside their own box. */
+:root{
+  --bg:#f4f6f8; --surface:#ffffff; --sunk:#eceff3; --fg:#141922; --muted:#5a6473; --line:#dde2e8;
+  --accent:#1d63c4; --ok:#1c7f47; --warn:#b85c00; --bad:#c62f2f; --changed:#fff6dc;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0e1116; --surface:#171b22; --sunk:#1f242d; --fg:#eef1f5; --muted:#9ba4b3; --line:#2b313b;
+  --accent:#6aa8ff; --ok:#4fc985; --warn:#ffb057; --bad:#ff7a7a; --changed:#2c2510; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:700;text-transform:uppercase;margin:0;line-height:1.05;letter-spacing:.01em}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.small{font-size:.85rem;padding:5px 10px}
+.muted{color:var(--muted)}
+.note{background:var(--sunk);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:.93rem}
+.note b{color:var(--fg)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.login{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;width:100%;max-width:360px;display:grid;gap:12px}
+.login h1{font-size:2rem}
+.login input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk)}
+.err{color:var(--bad);font-size:.9rem;min-height:1.2em}
+
+/* shell */
+header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.bar{display:flex;align-items:center;gap:12px;padding-block:12px;flex-wrap:wrap}
+.bar h1{font-size:1.5rem}
+.bar .sp{flex:1}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px}
+.tab{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.pill{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--changed);color:var(--warn)}
+main{padding-block:20px 60px;display:grid;gap:20px}
+.panel{display:grid;gap:16px}
+
+/* QR */
+.qrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.qr{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:8px;justify-items:center;text-align:center}
+.qr img{width:170px;height:170px;image-rendering:pixelated;background:#fff;border-radius:8px;padding:6px}
+.qr h3{font-size:1.3rem}
+.qr code{font-size:.78rem;word-break:break-all;color:var(--muted)}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th{position:sticky;top:0;background:var(--sunk);text-align:left;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:8px 6px;white-space:nowrap}
+td{border-top:1px solid var(--line);padding:3px 4px;vertical-align:middle}
+td input,td select{width:100%;min-width:70px;border:1px solid transparent;background:transparent;padding:6px;border-radius:6px}
+td input:hover,td select:hover{border-color:var(--line)}
+td input:focus,td select:focus{border-color:var(--accent);background:var(--sunk);outline:none}
+td.w-l input{min-width:170px}
+td.w-s input{min-width:60px;max-width:80px}
+td.w-d input{min-width:135px}
+tr.changed td{background:var(--changed)}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.team{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
+.team input,.team textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--sunk);padding:8px}
+.team textarea{min-height:190px;resize:vertical;line-height:1.5}
+.team label{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.field{display:grid;gap:4px;max-width:520px}
+.field input{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+.status{font-weight:600}
+.status.ok{color:var(--ok)} .status.bad{color:var(--bad)} .status.warn{color:var(--warn)}
+ol.steps{margin:0;padding-left:1.2em;display:grid;gap:4px}
+
+/* print */
+#print{display:none}
+@media print{
+  @page{size:A4;margin:12mm}
+  body{background:#fff;color:#000}
+  #app,#login{display:none!important}
+  #print{display:block}
+  .sheet{display:grid;grid-template-columns:1fr 1fr;gap:10mm 14mm;text-align:center;font-family:var(--body)}
+  .sheet h1{grid-column:1/-1;font-size:28pt;color:#000}
+  .sheet .sub{grid-column:1/-1;font-size:11pt;margin-top:-6mm}
+  .sheet figure{margin:0;break-inside:avoid}
+  .sheet img{width:62mm;height:62mm;image-rendering:pixelated}
+  .sheet figcaption{font-family:var(--display);font-weight:700;font-size:20pt;text-transform:uppercase}
+  .sheet figcaption small{display:block;font-family:var(--body);font-weight:400;font-size:8pt;text-transform:none;word-break:break-all}
+  .poster{text-align:center;padding-top:20mm;font-family:var(--body)}
+  .poster h1{font-size:44pt;color:#000}
+  .poster h2{font-size:34pt;margin-top:4mm;color:#000}
+  .poster img{width:140mm;height:140mm;margin:12mm auto 6mm;display:block;image-rendering:pixelated}
+  .poster p{font-size:14pt;margin:0}
+}
+</style>
+</head>
+<body>
+
+<section id="login">
+  <form class="login" id="loginForm">
+    <h1>Organiser login</h1>
+    <p class="muted" style="margin:0">CSG Sports Fest 2026 admin. Enter the organiser passcode.</p>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="Passcode" aria-label="Passcode" required>
+    <div class="err" id="loginErr"></div>
+    <button class="btn primary" type="submit">Log in</button>
+    <a href="./" class="muted" style="font-size:.9rem">← Back to the fest site</a>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <header>
+    <div class="wrap">
+      <div class="bar"><h1>Sports Fest Admin</h1><span class="pill" id="dirty" hidden></span><span class="sp"></span><a class="btn small" href="./" target="_blank" rel="noopener">Open site ↗</a><button class="btn small" id="logout" type="button">Log out</button></div>
+      <nav class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="qr" aria-selected="true">QR codes &amp; links</button>
+        <button class="tab" role="tab" data-tab="fixtures">Fixtures &amp; results</button>
+        <button class="tab" role="tab" data-tab="teams">Teams</button>
+        <button class="tab" role="tab" data-tab="publish">Publish changes</button>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap" id="main"></main>
+</div>
+
+<div id="print"></div>
+
+<script>
+/* Passcode check happens in the browser. It keeps casual visitors out of this screen;
+   the real protection for changes is the GitHub token, which only organisers have. */
+const PASS_HASH = "c5651391d7a4b0d4e707373c5ff35c4c0f1207aaf0384008c3e012b65a2af3e1";
+const OWNER = "shrikantfte-coder", REPO = "csg-sports-fest-2026", FILE = "data.json", BRANCH = "main";
+const SITE = "https://shrikantfte-coder.github.io/csg-sports-fest-2026/";
+const PAGES = [
+  {id:"all", name:"All sports", hash:""},
+  {id:"table-tennis", name:"Table Tennis", hash:"#table-tennis"},
+  {id:"carrom", name:"Carrom", hash:"#carrom"},
+  {id:"chess", name:"Chess", hash:"#chess"},
+  {id:"cricket", name:"Cricket", hash:"#cricket"},
+  {id:"volleyball", name:"Volleyball", hash:"#volleyball"},
+];
+const FIX = {
+  tt:{name:"Table Tennis", cols:[["date","Date","date"],["start","Start","t"],["end","End","t"],["event","Event",["MS","WS","MD","WD"]],["id","Match","s"],["a","Player / team 1","l"],["b","Player / team 2","l"],["ref","Referee","l"],["result","Result","l"]]},
+  carrom:{name:"Carrom", cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["round","Round",["R1","R2","R3","RR","FINAL"]],["a","Team 1","l"],["b","Team 2","l"],["result","Result","l"]]},
+  chess:{name:"Chess", cols:[["no","#","s"],["date","Date","date"],["slot","Slot","t"],["group","Group","s"],["round","Round","s"],["board","Board","s"],["a","Player 1","l"],["b","Player 2","l"],["result","Result","l"]]},
+  cricketFixtures:{name:"Cricket", cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["result","Result","l"]]},
+  volleyballFixtures:{name:"Volleyball", cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["result","Result","l"]]},
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = { get(k){ try{ return localStorage.getItem(k); }catch(_){ return null; } }, set(k,v){ try{ v==null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(_){} } };
+const sstore = { get(k){ try{ return sessionStorage.getItem(k); }catch(_){ return null; } }, set(k,v){ try{ sessionStorage.setItem(k,v); }catch(_){} } };
+
+let D = null, ORIGINAL = "", SHA = null, tab = "qr", fixSport = "tt", teamSport = "cricket", filterText = "";
+
+async function sha256(t){
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+$("#loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const h = await sha256($("#pass").value.trim());
+  if(h !== PASS_HASH){ $("#loginErr").textContent = "That passcode is not right. Try again."; return; }
+  sstore.set("admin", "1"); start();
+});
+$("#logout").addEventListener("click", () => { try{ sessionStorage.removeItem("admin"); }catch(_){} location.reload(); });
+
+/* ---------- data ---------- */
+const b64decode = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")), c=>c.charCodeAt(0)));
+const b64encode = s => { const bytes = new TextEncoder().encode(s); let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); };
+async function loadData(){
+  try{
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}?ref=${BRANCH}&t=${Date.now()}`, {headers:{Accept:"application/vnd.github+json"}});
+    if(!r.ok) throw new Error(r.status);
+    const j = await r.json(); SHA = j.sha; ORIGINAL = b64decode(j.content);
+  }catch(_){
+    const r = await fetch(FILE+"?v="+Date.now(), {cache:"no-store"}); ORIGINAL = await r.text(); SHA = null;
+  }
+  const draft = store.get("draft");
+  D = JSON.parse(draft && JSON.parse(draft).base === ORIGINAL.length ? JSON.parse(draft).data : ORIGINAL);
+  D.cricketFixtures ||= []; D.volleyballFixtures ||= [];
+}
+const serialize = () => JSON.stringify({...D, updated: undefined}, null, 1);
+const originalSer = () => { const o = JSON.parse(ORIGINAL); o.cricketFixtures ||= []; o.volleyballFixtures ||= []; return JSON.stringify({...o, updated: undefined}, null, 1); };
+function markDirty(){
+  const dirty = serialize() !== originalSer();
+  $("#dirty").hidden = !dirty; $("#dirty").textContent = "Unpublished changes";
+  store.set("draft", dirty ? JSON.stringify({base: ORIGINAL.length, data: JSON.stringify(D)}) : null);
+  return dirty;
+}
+
+/* ---------- views ---------- */
+function viewQR(){
+  const cards = PAGES.map(p => `<div class="qr"><img src="qr/qr-${p.id}.png" alt="QR code for ${esc(p.name)}"><h3>${esc(p.name)}</h3><code>${esc(SITE+p.hash)}</code>
+    <div class="row" style="justify-content:center"><button class="btn small" data-copy="${esc(SITE+p.hash)}">Copy link</button><a class="btn small" href="qr/qr-${p.id}.png" download="csg-sports-fest-qr-${p.id}.png">Download</a><button class="btn small" data-poster="${p.id}">Print poster</button></div></div>`).join("");
+  return `<div class="panel">
+    <div class="row"><h2 style="font-size:1.8rem">QR codes &amp; links</h2><span class="sp" style="flex:1"></span><button class="btn primary" data-print="sheet">Print all QR codes (A4)</button><a class="btn" href="qr/qr-sheet.png" download="csg-sports-fest-qr-sheet.png">Download sheet</a></div>
+    <p class="muted" style="margin:0">Each QR code opens that sport's page. "Print poster" prints one large QR code for the venue wall. These links never change, so printed codes keep working after you update fixtures.</p>
+    <div class="qrs">${cards}</div></div>`;
+}
+function cell(r,i,[k,label,type]){
+  const v = r[k] ?? "";
+  if(Array.isArray(type)) return `<td><select data-i="${i}" data-k="${k}" aria-label="${label}">${type.map(o=>`<option ${o===v?"selected":""}>${o}</option>`).join("")}</select></td>`;
+  const cls = type==="l"?"w-l":type==="s"?"w-s":type==="date"?"w-d":"";
+  return `<td class="${cls}"><input data-i="${i}" data-k="${k}" type="${type==="date"?"date":"text"}" value="${esc(v)}" aria-label="${label}"></td>`;
+}
+function viewFixtures(){
+  const S = FIX[fixSport], rows = D[fixSport];
+  const orig = JSON.parse(ORIGINAL)[fixSport] || [];
+  const f = filterText.toLowerCase();
+  const body = rows.map((r,i)=>({r,i})).filter(({r})=>!f || Object.values(r).join(" ").toLowerCase().includes(f)).map(({r,i}) =>
+    `<tr class="${JSON.stringify(r)!==JSON.stringify(orig[i])?"changed":""}">${S.cols.map(c=>cell(r,i,c)).join("")}<td><button class="btn small danger" data-del="${i}" aria-label="Delete row">✕</button></td></tr>`).join("");
+  const sel = Object.entries(FIX).map(([k,v])=>`<option value="${k}" ${k===fixSport?"selected":""}>${v.name}</option>`).join("");
+  return `<div class="panel">
+    <div class="row"><h2 style="font-size:1.8rem">Fixtures &amp; results</h2></div>
+    <div class="row"><select id="fixSport" class="btn">${sel}</select><input id="filter" class="btn" style="font-weight:400;min-width:200px" placeholder="Filter rows, e.g. a name or date" value="${esc(filterText)}"><span class="muted">${rows.length} ${rows.length===1?"match":"matches"}</span><span style="flex:1"></span><button class="btn primary" id="addRow">+ Add match</button></div>
+    <p class="note" style="margin:0">Edit any cell and it is kept in this browser straight away. Type a <b>Result</b> (for example "Navii won 11-7" or "Winner: Kaveri") to show it on the site. For knock-out rounds, replace "Winner of M01" with the team name once known. When you are done, go to <b>Publish changes</b>.</p>
+    <div class="tbl"><table><thead><tr>${S.cols.map(c=>`<th>${c[1]}</th>`).join("")}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${S.cols.length+1}" class="muted" style="padding:16px">No matches yet. Use “Add match” to create the first one.</td></tr>`}</tbody></table></div>
+  </div>`;
+}
+function viewTeams(){
+  const opts = [["cricket","Cricket"],["volleyball","Volleyball"],["carrom","Carrom"],["chess","Chess groups"]].map(([k,n])=>`<option value="${k}" ${k===teamSport?"selected":""}>${n}</option>`).join("");
+  let inner = "";
+  if(teamSport==="cricket" || teamSport==="volleyball"){
+    const list = D[teamSport];
+    inner = `<div class="teams">${list.map((t,i)=>`<div class="team"><label for="tn${i}">Team name</label><input id="tn${i}" data-team="${i}" value="${esc(t.name)}"><label for="tp${i}">Players, one per line${teamSport==="volleyball"?" (add “, Position” if known)":""}</label><textarea id="tp${i}" data-players="${i}">${esc(t.players.map(p=>Array.isArray(p)?(p[1]?p[0]+", "+p[1]:p[0]):p).join("\n"))}</textarea><button class="btn small danger" data-delteam="${i}">Remove team</button></div>`).join("")}</div>
+      <div><button class="btn" id="addTeam">+ Add team</button></div>`;
+  } else if(teamSport==="carrom"){
+    inner = `<div class="tbl"><table><thead><tr><th>Team no.</th><th>Team name</th><th>Round 1 match</th><th></th></tr></thead><tbody>${D.carromTeams.map((t,i)=>`<tr><td class="w-s"><input data-ct="${i}" data-k="no" value="${esc(t.no)}"></td><td class="w-l"><input data-ct="${i}" data-k="name" value="${esc(t.name)}"></td><td class="w-s"><input data-ct="${i}" data-k="r1" value="${esc(t.r1)}"></td><td><button class="btn small danger" data-delct="${i}">✕</button></td></tr>`).join("")}</tbody></table></div><div><button class="btn" id="addCT">+ Add team</button></div>
+      <p class="note" style="margin:0">Renaming a team here does not rename it in the fixtures. Change it in <b>Fixtures &amp; results</b> too.</p>`;
+  } else {
+    inner = `<div class="teams">${Object.entries(D.chessGroups).map(([g,ps])=>`<div class="team"><label>Group ${g} · plays</label><input data-plays="${g}" value="${esc(D.chessPlays[g]||"")}"><label for="cg${g}">Players, one per line</label><textarea id="cg${g}" data-group="${g}">${esc(ps.join("\n"))}</textarea></div>`).join("")}</div>`;
+  }
+  return `<div class="panel"><div class="row"><h2 style="font-size:1.8rem">Teams</h2><span style="flex:1"></span><select id="teamSport" class="btn">${opts}</select></div>${inner}</div>`;
+}
+function viewPublish(){
+  const dirty = markDirty();
+  const remembered = store.get("ghtoken");
+  return `<div class="panel" style="max-width:720px">
+    <h2 style="font-size:1.8rem">Publish changes</h2>
+    <p class="status ${dirty?"warn":"ok"}" style="margin:0">${dirty?"You have changes that are not on the site yet.":"No unpublished changes. The site matches what is saved."}</p>
+    <div class="field"><label for="token"><b>GitHub access token</b></label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(remembered||"")}">
+      <label class="muted" style="font-size:.9rem"><input type="checkbox" id="remember" ${remembered?"checked":""}> Remember on this device</label></div>
+    <div class="row"><button class="btn primary" id="publish" ${dirty?"":"disabled"}>Publish to the site</button><button class="btn" id="download">Download backup (data.json)</button><button class="btn danger" id="discard" ${dirty?"":"disabled"}>Discard my changes</button></div>
+    <p class="status" id="pubStatus" aria-live="polite"></p>
+    <div class="note"><b>Getting a token (one time, about 2 minutes)</b>
+      <ol class="steps"><li>Sign in to GitHub as the repository owner, or as a collaborator added to the repository.</li>
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">New fine-grained token</a>.</li>
+      <li>Repository access: <b>Only select repositories</b> → <b>${REPO}</b>.</li>
+      <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
+      <li>Generate, copy the token, and paste it above. Don't share it in chats or groups.</li></ol>
+      <p style="margin:.6em 0 0">After publishing, the site updates in about 1 to 2 minutes. No token? Download the backup file and upload it as <b>data.json</b> on the <a href="https://github.com/${OWNER}/${REPO}" target="_blank" rel="noopener">repository page</a> (Add file → Upload files).</p></div>
+  </div>`;
+}
+function render(){
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===tab));
+  const focusId = document.activeElement && document.activeElement.id;
+  $("#main").innerHTML = ({qr:viewQR, fixtures:viewFixtures, teams:viewTeams, publish:viewPublish})[tab]();
+  markDirty();
+  if(focusId==="filter"){ const f=$("#filter"); f.focus(); f.setSelectionRange(f.value.length,f.value.length); }
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", async e => {
+  const t = e.target.closest("button, a"); if(!t) return;
+  if(t.dataset.tab){ tab = t.dataset.tab; render(); return; }
+  if(t.dataset.copy){ try{ await navigator.clipboard.writeText(t.dataset.copy); t.textContent="Copied"; }catch(_){ t.textContent="Copy failed"; } setTimeout(()=>t.textContent="Copy link",1500); return; }
+  if(t.dataset.print==="sheet"){ printSheet(); return; }
+  if(t.dataset.poster){ printPoster(t.dataset.poster); return; }
+  if(t.dataset.del){ D[fixSport].splice(+t.dataset.del,1); render(); return; }
+  if(t.id==="addRow"){
+    const S = FIX[fixSport], last = D[fixSport][D[fixSport].length-1] || {};
+    const r = {}; S.cols.forEach(([k,,type])=>r[k] = k==="date"?(last.date||new Date().toISOString().slice(0,10)) : Array.isArray(type)?(last[k]||type[0]) : "");
+    if(fixSport==="tt") r.stage="League";
+    D[fixSport].push(r); filterText=""; render();
+    const inputs = document.querySelectorAll("tbody tr:last-child input"); inputs[0]?.focus(); inputs[0]?.scrollIntoView({block:"center"});
+    return;
+  }
+  if(t.dataset.delteam){ D[teamSport].splice(+t.dataset.delteam,1); render(); return; }
+  if(t.id==="addTeam"){ D[teamSport].push({name:"New team", players:[]}); render(); return; }
+  if(t.dataset.delct){ D.carromTeams.splice(+t.dataset.delct,1); render(); return; }
+  if(t.id==="addCT"){ D.carromTeams.push({no:D.carromTeams.length+1, name:"", r1:""}); render(); return; }
+  if(t.id==="download"){ const blob = new Blob([JSON.stringify({...D, updated:new Date().toISOString()},null,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="data.json"; a.click(); return; }
+  if(t.id==="discard"){
+    if(t.dataset.sure!=="1"){ t.dataset.sure="1"; t.textContent="Click again to discard"; return; }
+    store.set("draft",null); D = JSON.parse(ORIGINAL); D.cricketFixtures ||= []; D.volleyballFixtures ||= []; render(); return;
+  }
+  if(t.id==="publish") publish(t);
+});
+document.addEventListener("input", e => {
+  const el = e.target, ds = el.dataset;
+  if(el.id==="filter"){ filterText = el.value; render(); return; }
+  if(ds.i!==undefined){ D[fixSport][+ds.i][ds.k] = el.value; el.closest("tr").classList.add("changed"); markDirty(); return; }
+  if(ds.team!==undefined){ D[teamSport][+ds.team].name = el.value; markDirty(); return; }
+  if(ds.players!==undefined){
+    const lines = el.value.split("\n").map(s=>s.trim()).filter(Boolean);
+    D[teamSport][+ds.players].players = teamSport==="volleyball" ? lines.map(l=>{ const i=l.indexOf(","); return i<0?[l,""]:[l.slice(0,i).trim(), l.slice(i+1).trim()]; }) : lines;
+    markDirty(); return;
+  }
+  if(ds.ct!==undefined){ const t = D.carromTeams[+ds.ct]; t[ds.k] = ds.k==="no" ? (parseInt(el.value)||el.value) : el.value; markDirty(); return; }
+  if(ds.group!==undefined){ D.chessGroups[ds.group] = el.value.split("\n").map(s=>s.trim()).filter(Boolean); markDirty(); return; }
+  if(ds.plays!==undefined){ D.chessPlays[ds.plays] = el.value; markDirty(); return; }
+});
+document.addEventListener("change", e => {
+  if(e.target.id==="fixSport"){ fixSport = e.target.value; filterText=""; render(); }
+  if(e.target.id==="teamSport"){ teamSport = e.target.value; render(); }
+  if(e.target.id==="remember" && !e.target.checked) store.set("ghtoken", null);
+});
+
+async function publish(btn){
+  const token = $("#token").value.trim(), st = $("#pubStatus");
+  if(!token){ st.className="status bad"; st.textContent="Paste your GitHub token first. The steps are below."; return; }
+  if($("#remember").checked) store.set("ghtoken", token);
+  btn.disabled = true; st.className="status"; st.textContent="Publishing…";
+  const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+  const H = {Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json"};
+  try{
+    const cur = await fetch(`${api}?ref=${BRANCH}&t=${Date.now()}`, {headers:H});
+    if(cur.status===401) throw new Error("GitHub did not accept the token. Check you copied all of it and that it has not expired.");
+    if(!cur.ok) throw new Error(`Could not read the current data (GitHub said ${cur.status}).`);
+    const cj = await cur.json();
+    if(SHA && cj.sha !== SHA && btn.dataset.force!=="1"){
+      btn.dataset.force="1"; btn.disabled=false; btn.textContent="Publish anyway";
+      throw new Error("Someone else published changes after you opened this page. Publishing now will replace their changes. Click “Publish anyway” to continue, or Discard and reload to start from their version.");
+    }
+    const body = JSON.stringify({...D, updated:new Date().toISOString()}, null, 1);
+    const put = await fetch(api, {method:"PUT", headers:{...H,"Content-Type":"application/json"}, body:JSON.stringify({message:"Update fixtures from admin page", content:b64encode(body), sha:cj.sha, branch:BRANCH})});
+    if(put.status===403 || put.status===404) throw new Error("This token cannot write to the repository. Give it Contents: Read and write on "+REPO+".");
+    if(!put.ok) throw new Error(`GitHub refused the update (${put.status}). Try again in a minute.`);
+    const pj = await put.json();
+    SHA = pj.content.sha; ORIGINAL = body; store.set("draft", null);
+    render(); const s2 = $("#pubStatus"); s2.className="status ok"; s2.textContent="Published. The site will show the changes in about 1 to 2 minutes.";
+  }catch(err){
+    st.className="status bad"; st.textContent = err.message; btn.disabled=false;
+  }
+}
+
+function printSheet(){
+  $("#print").innerHTML = `<div class="sheet"><h1>CSG Sports Fest 2026</h1><p class="sub">Scan to see fixtures, teams and venues</p>${PAGES.map(p=>`<figure><img src="qr/qr-${p.id}.png" alt=""><figcaption>${esc(p.name)}<small>${esc(SITE+p.hash)}</small></figcaption></figure>`).join("")}</div>`;
+  whenImages(()=>window.print());
+}
+function printPoster(id){
+  const p = PAGES.find(x=>x.id===id);
+  $("#print").innerHTML = `<div class="poster"><h1>CSG Sports Fest 2026</h1><h2>${esc(p.name)}</h2><img src="qr/qr-${p.id}.png" alt=""><p>Scan for fixtures, timings and teams</p><p style="font-size:10pt;margin-top:4mm">${esc(SITE+p.hash)}</p></div>`;
+  whenImages(()=>window.print());
+}
+function whenImages(cb){
+  const imgs=[...document.querySelectorAll("#print img")];
+  Promise.all(imgs.map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r;}))).then(cb);
+}
+
+async function start(){
+  $("#login").hidden = true; $("#app").hidden = false;
+  $("#main").innerHTML = `<p class="muted">Loading…</p>`;
+  try{ await loadData(); }catch(_){ $("#main").innerHTML = `<p class="status bad">Could not load the fest data. Check your connection and reload.</p>`; return; }
+  render();
+}
+if(sstore.get("admin")==="1") start();
+</script>
+</body>
+</html>
