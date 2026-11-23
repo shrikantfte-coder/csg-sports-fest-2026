@@ -2017,6 +2017,8 @@
   {
    "name": "Royal Riders",
    "players": [
+    "Gaurav M G",
+    "Varun M N",
     "Manjunath",
     "Vineeth",
     "Venkat E",
@@ -2033,6 +2035,8 @@
   {
    "name": "Avengers",
    "players": [
+    "Manjesh Kumar K",
+    "Shrikant Bhajantri",
     "Shrikant Hogtapur",
     "Baban Singh",
     "Pramod K",
@@ -2050,6 +2054,8 @@
   {
    "name": "Raising Learners",
    "players": [
+    "Santhosh Kumbar",
+    "Rahul",
     "Sivith",
     "Santhosh P",
     "Karthik D N",
@@ -2066,6 +2072,8 @@
   {
    "name": "Tech Tigers",
    "players": [
+    "Raghupati",
+    "Abhijit Kumar",
     "Rajat",
     "Karthik",
     "Abhishek",
@@ -2082,6 +2090,8 @@
   {
    "name": "Thunder Strikers",
    "players": [
+    "Pavan Shubhakar",
+    "Chethan Kumar S",
     "Rakshith Gowda",
     "Gowtham",
     "Arvind",
@@ -2098,6 +2108,8 @@
   {
    "name": "Royal Challengers",
    "players": [
+    "Abhilash B A",
+    "Rakesh G M",
     "Dhanush",
     "Nagaraj",
     "Yashveer",
@@ -2115,5 +2127,5 @@
  ],
  "cricketFixtures": [],
  "volleyballFixtures": [],
- "updated": "2026-11-23T07:43:52+00:00"
+ "updated": "2026-11-23T07:54:43+00:00"
 }
