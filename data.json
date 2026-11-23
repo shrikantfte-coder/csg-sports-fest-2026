@@ -344,7 +344,9 @@
    "a": "Shrikant Hogtapur",
    "b": "Pavan Shubhakar",
    "ref": "Arvind",
-   "stage": "League"
+   "stage": "League",
+   "winner": "a",
+   "result": "played on 23rd nov"
   },
   {
    "date": "2026-11-25",
@@ -377,7 +379,9 @@
    "a": "Ashok",
    "b": "Shrikant Bhajantri",
    "ref": "Shrikant Hogtapur",
-   "stage": "League"
+   "stage": "League",
+   "winner": "a",
+   "result": "played on 23rd nov"
   },
   {
    "date": "2026-11-25",
@@ -2198,6 +2202,6 @@
  ],
  "cricketFixtures": [],
  "volleyballFixtures": [],
- "updated": "2026-11-23T15:11:02.224Z",
+ "updated": "2026-11-23T15:54:53.824Z",
  "festDates": "23 Nov – 12 Dec 2026"
 }
