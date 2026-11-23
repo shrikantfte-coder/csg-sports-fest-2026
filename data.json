@@ -9,7 +9,8 @@
    "a": "Sourabh Madiwal",
    "b": "Navii",
    "ref": "Yash",
-   "stage": "League"
+   "stage": "League",
+   "winner": "b"
   },
   {
    "date": "2026-11-23",
@@ -31,7 +32,8 @@
    "a": "Shrikant Hogtapur",
    "b": "Bhuvan shetty",
    "ref": "Arvind",
-   "stage": "League"
+   "stage": "League",
+   "winner": "b"
   },
   {
    "date": "2026-11-23",
@@ -53,7 +55,8 @@
    "a": "Rakshith Gowda D P",
    "b": "Shrikant Bhajantri",
    "ref": "Arvind",
-   "stage": "League"
+   "stage": "League",
+   "winner": "a"
   },
   {
    "date": "2026-11-23",
@@ -64,7 +67,8 @@
    "a": "Yash",
    "b": "Ashok",
    "ref": "Shrikant Hogtapur",
-   "stage": "League"
+   "stage": "League",
+   "winner": "a"
   },
   {
    "date": "2026-11-23",
@@ -97,7 +101,8 @@
    "a": "Arvind",
    "b": "Manjesh Kumar K",
    "ref": "Sourabh",
-   "stage": "League"
+   "stage": "League",
+   "winner": "b"
   },
   {
    "date": "2026-11-23",
@@ -2193,6 +2198,6 @@
  ],
  "cricketFixtures": [],
  "volleyballFixtures": [],
- "updated": "2026-11-23T07:54:43+00:00",
+ "updated": "2026-11-23T15:11:02.224Z",
  "festDates": "23 Nov – 12 Dec 2026"
 }
