@@ -12,7 +12,7 @@
 :root{
   --bg:#f4f6f8; --surface:#ffffff; --sunk:#eceff3; --fg:#141922; --muted:#5a6473; --line:#dde2e8;
   --tt:#d0432a; --carrom:#a86a12; --chess:#3d4466; --cricket:#1c7f47; --volley:#1d63c4; --all:#141922;
-  --today:#e8a400; --today-bg:#fff6dc;
+  --today:#e8a400; --today-bg:#fff6dc; --win:#17773f; --win-bg:#e2f3e8;
   --qr-bg:#ffffff;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -21,11 +21,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0e1116; --surface:#171b22; --sunk:#1f242d; --fg:#eef1f5; --muted:#9ba4b3; --line:#2b313b;
   --tt:#ff7a5c; --carrom:#e2a54a; --chess:#a9b1e0; --cricket:#4fc985; --volley:#6aa8ff; --all:#eef1f5;
-  --today:#ffc83d; --today-bg:#2c2510; color-scheme:dark}}
+  --today:#ffc83d; --today-bg:#2c2510; --win:#5fd394; --win-bg:#15301f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1116; --surface:#171b22; --sunk:#1f242d; --fg:#eef1f5; --muted:#9ba4b3; --line:#2b313b;
   --tt:#ff7a5c; --carrom:#e2a54a; --chess:#a9b1e0; --cricket:#4fc985; --volley:#6aa8ff; --all:#eef1f5;
-  --today:#ffc83d; --today-bg:#2c2510; color-scheme:dark}
+  --today:#ffc83d; --today-bg:#2c2510; --win:#5fd394; --win-bg:#15301f; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
@@ -145,6 +145,31 @@ mark{background:var(--today-bg);color:inherit;border-radius:3px;padding:0 2px;bo
 .person .m{grid-template-columns:5.6rem 1fr auto}
 .empty{text-align:center;color:var(--muted);padding:30px 10px}
 .foot{color:var(--muted);font-size:.82rem;text-align:center;padding-top:8px}
+/* Results */
+.m .vs .won{font-weight:700}
+.m .vs .lost{color:var(--muted);font-weight:500}
+.wtag,.dtag,.out{display:inline-block;font-family:var(--body);font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:1px 7px;border-radius:999px;vertical-align:2px}
+.wtag{background:var(--win-bg);color:var(--win)}
+.dtag{background:var(--sunk);color:var(--fg)}
+.out{margin-bottom:3px}
+.out.won{background:var(--win-bg);color:var(--win)}
+.out.lost{background:var(--sunk);color:var(--muted)}
+.out.draw{background:var(--sunk);color:var(--fg)}
+.champ{display:flex;align-items:center;gap:12px;background:var(--today-bg);border:1px solid var(--today);border-radius:14px;padding:12px 16px}
+.champ svg{width:30px;height:30px;color:var(--today);flex:none}
+.champ span{display:block;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.champ b{font-family:var(--display);font-size:1.6rem;text-transform:uppercase;line-height:1.1}
+.champ-line{display:flex;align-items:center;gap:6px;font-weight:700}
+.champ-line svg{width:18px;height:18px;color:var(--today);flex:none}
+.tblwrap{overflow-x:auto}
+table.st{width:100%;border-collapse:collapse;font-size:.92rem;font-variant-numeric:tabular-nums}
+table.st th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:4px 6px;font-weight:600}
+table.st td{padding:5px 6px;border-top:1px solid var(--line);text-align:right}
+table.st .nm{text-align:left;font-weight:600}
+table.st th.nm{font-weight:600}
+table.st .pos{width:1.6rem;text-align:left;color:var(--muted)}
+table.st tr.q td{background:var(--win-bg)}
+.qr .code img,.mine .code img{display:block;width:100%;height:auto;image-rendering:pixelated}
 @media (max-width:480px){
   .m{grid-template-columns:3.9rem 1fr;}
   .m .meta{grid-column:2;text-align:left}
@@ -158,7 +183,7 @@ mark{background:var(--today-bg);color:inherit;border-radius:3px;padding:0 2px;bo
 
 <header class="top">
   <div class="wrap">
-    <div class="brand"><a href="#"><h1>CSG Sports Fest <span>2026</span></h1></a><small>23 Nov – 9 Dec</small></div>
+    <div class="brand"><a href="#"><h1>CSG Sports Fest <span>2026</span></h1></a><small id="festDates">23 Nov – 12 Dec</small></div>
     <nav class="tabs" id="tabs" aria-label="Sports"></nav>
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -168,274 +193,8 @@ mark{background:var(--today-bg);color:inherit;border-radius:3px;padding:0 2px;bo
   </div>
 </header>
 <main class="wrap"><div id="app" class="view"></div></main>
-
-<script>
-let D = null;
-const QR = {"all": "<svg role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"148\" height=\"148\" class=\"segno\"><g transform=\"scale(4)\"><path fill=\"#fff\" d=\"M0 0h37v37h-37z\"/><path class=\"qrline\" stroke=\"#000\" d=\"M2 2.5h7m2 0h1m2 0h2m2 0h1m1 0h4m1 0h1m2 0h7m-33 1h1m5 0h1m3 0h1m1 0h4m1 0h2m1 0h3m3 0h1m5 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m3 0h1m1 0h2m1 0h2m1 0h1m1 0h2m1 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h5m1 0h1m1 0h2m2 0h1m1 0h3m1 0h1m-33 1h1m1 0h3m1 0h1m1 0h1m4 0h1m1 0h1m1 0h1m1 0h1m1 0h3m2 0h1m1 0h3m1 0h1m-33 1h1m5 0h1m1 0h2m1 0h2m2 0h3m2 0h2m2 0h1m1 0h1m5 0h1m-33 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-25 1h1m2 0h2m2 0h1m4 0h5m-25 1h1m1 0h5m2 0h1m1 0h1m1 0h5m1 0h1m2 0h1m1 0h1m1 0h5m-27 1h2m2 0h2m1 0h2m1 0h1m1 0h1m1 0h4m1 0h1m2 0h2m1 0h2m1 0h1m-32 1h2m2 0h2m1 0h2m1 0h2m2 0h2m1 0h1m1 0h1m4 0h1m2 0h1m1 0h2m-32 1h1m1 0h1m1 0h2m3 0h4m1 0h2m2 0h1m1 0h3m1 0h3m1 0h3m1 0h1m-33 1h4m1 0h3m2 0h3m4 0h3m3 0h1m3 0h3m1 0h2m-32 1h1m2 0h2m1 0h1m1 0h1m3 0h4m2 0h1m3 0h1m2 0h1m4 0h2m-31 1h1m2 0h3m14 0h1m2 0h2m1 0h4m-32 1h4m1 0h1m2 0h4m4 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h2m-30 1h8m4 0h1m3 0h1m4 0h4m1 0h2m3 0h1m-33 1h3m6 0h4m3 0h1m1 0h2m2 0h2m1 0h3m1 0h2m1 0h1m-32 1h4m1 0h1m3 0h2m1 0h6m1 0h3m1 0h5m1 0h1m-31 1h1m2 0h3m2 0h4m2 0h1m1 0h1m1 0h1m1 0h6m1 0h4m1 0h1m-27 1h1m3 0h2m2 0h2m1 0h2m1 0h1m1 0h1m1 0h2m2 0h2m-30 1h1m3 0h1m2 0h1m3 0h3m1 0h1m3 0h3m1 0h1m1 0h2m2 0h1m2 0h1m-33 1h1m1 0h3m1 0h1m1 0h2m2 0h2m1 0h1m4 0h3m1 0h1m3 0h2m1 0h1m-32 1h1m2 0h2m2 0h2m6 0h1m3 0h1m1 0h1m2 0h4m2 0h2m-32 1h1m1 0h1m1 0h1m1 0h1m3 0h4m1 0h1m1 0h1m4 0h1m1 0h5m3 0h1m-25 1h2m2 0h3m1 0h1m2 0h3m1 0h2m3 0h1m1 0h1m1 0h1m-33 1h7m2 0h3m2 0h2m1 0h1m4 0h3m1 0h1m1 0h1m1 0h2m-32 1h1m5 0h1m1 0h1m2 0h3m2 0h1m1 0h1m1 0h2m1 0h2m3 0h4m-32 1h1m1 0h3m1 0h1m1 0h2m2 0h2m3 0h2m1 0h1m1 0h1m1 0h6m1 0h1m-32 1h1m1 0h3m1 0h1m1 0h1m3 0h1m2 0h1m2 0h4m2 0h2m2 0h2m1 0h2m-33 1h1m1 0h3m1 0h1m1 0h1m3 0h2m1 0h4m1 0h1m1 0h1m3 0h2m1 0h1m-30 1h1m5 0h1m2 0h3m2 0h1m1 0h1m1 0h1m1 0h2m1 0h1m4 0h3m-31 1h7m1 0h1m1 0h2m1 0h2m2 0h2m1 0h1m1 0h6m3 0h1\"/></g></svg>", "table-tennis": "<svg role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"164\" height=\"164\" class=\"segno\"><g transform=\"scale(4)\"><path fill=\"#fff\" d=\"M0 0h41v41h-41z\"/><path class=\"qrline\" stroke=\"#000\" d=\"M2 2.5h7m4 0h1m2 0h5m1 0h2m1 0h1m2 0h1m1 0h1m1 0h7m-37 1h1m5 0h1m3 0h2m1 0h1m2 0h1m1 0h2m4 0h1m1 0h3m1 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h3m1 0h1m6 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m3 0h1m1 0h4m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m2 0h3m1 0h3m2 0h1m4 0h1m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h3m2 0h4m1 0h1m3 0h1m3 0h2m2 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h2m1 0h3m2 0h1m2 0h3m6 0h1m-29 1h1m1 0h5m2 0h4m1 0h1m3 0h3m1 0h1m1 0h3m3 0h5m-34 1h4m2 0h1m1 0h2m1 0h1m1 0h4m5 0h1m11 0h1m-36 1h1m3 0h4m1 0h1m1 0h1m1 0h2m2 0h1m2 0h1m1 0h1m2 0h4m1 0h1m2 0h1m1 0h2m-37 1h1m1 0h1m1 0h2m1 0h1m1 0h3m2 0h1m1 0h1m4 0h1m6 0h2m1 0h1m4 0h1m-37 1h2m4 0h1m2 0h2m1 0h1m3 0h3m3 0h1m1 0h3m2 0h4m1 0h3m-37 1h1m3 0h1m3 0h1m1 0h4m2 0h4m3 0h1m2 0h1m1 0h1m2 0h1m3 0h1m-35 1h2m2 0h3m2 0h3m1 0h4m3 0h1m2 0h1m2 0h3m1 0h3m1 0h2m-33 1h1m3 0h3m1 0h3m2 0h3m1 0h2m3 0h2m1 0h4m-33 1h3m1 0h3m6 0h4m5 0h1m1 0h4m2 0h3m1 0h1m1 0h1m-36 1h5m1 0h1m5 0h1m1 0h1m1 0h2m1 0h4m5 0h1m1 0h1m1 0h1m1 0h1m-36 1h1m1 0h1m1 0h1m1 0h1m2 0h3m1 0h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h2m3 0h2m1 0h3m-36 1h3m6 0h3m1 0h2m3 0h4m5 0h1m1 0h1m2 0h1m2 0h1m-35 1h3m1 0h1m1 0h1m1 0h1m2 0h5m1 0h1m2 0h1m1 0h4m1 0h2m1 0h3m-35 1h1m2 0h2m3 0h4m1 0h1m2 0h1m1 0h4m1 0h1m4 0h2m3 0h1m1 0h1m-36 1h3m3 0h1m2 0h5m1 0h2m1 0h1m1 0h1m4 0h1m1 0h2m1 0h4m1 0h2m-36 1h1m1 0h1m4 0h2m3 0h4m3 0h4m7 0h2m2 0h1m-36 1h2m2 0h3m1 0h2m3 0h1m4 0h1m1 0h2m1 0h1m1 0h2m1 0h1m1 0h3m1 0h2m-36 1h2m3 0h1m5 0h1m2 0h3m6 0h1m5 0h1m1 0h1m2 0h1m-35 1h1m1 0h1m1 0h1m1 0h4m1 0h1m2 0h1m2 0h2m1 0h2m4 0h2m2 0h2m3 0h2m-37 1h1m3 0h1m4 0h2m2 0h1m2 0h1m4 0h2m3 0h1m4 0h1m-32 1h1m1 0h2m1 0h3m2 0h3m1 0h1m2 0h1m2 0h1m1 0h4m1 0h10m-29 1h2m3 0h1m3 0h1m1 0h5m1 0h1m1 0h2m3 0h2m-34 1h7m2 0h4m1 0h4m3 0h1m4 0h1m1 0h1m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h2m3 0h2m1 0h3m2 0h1m1 0h2m3 0h1m3 0h2m2 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m3 0h1m1 0h3m2 0h1m1 0h1m2 0h9m1 0h1m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m6 0h1m2 0h1m1 0h2m1 0h3m3 0h2m1 0h1m3 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h4m1 0h5m1 0h2m3 0h3m4 0h4m-37 1h1m5 0h1m3 0h2m1 0h1m1 0h1m3 0h3m4 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-37 1h7m1 0h3m4 0h1m1 0h1m1 0h1m2 0h1m1 0h4m2 0h1m1 0h5\"/></g></svg>", "carrom": "<svg role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"164\" height=\"164\" class=\"segno\"><g transform=\"scale(4)\"><path fill=\"#fff\" d=\"M0 0h41v41h-41z\"/><path class=\"qrline\" stroke=\"#000\" d=\"M2 2.5h7m2 0h2m1 0h3m2 0h2m1 0h3m1 0h1m3 0h1m1 0h7m-37 1h1m5 0h1m5 0h1m1 0h3m1 0h2m6 0h3m1 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m1 0h2m2 0h3m2 0h1m5 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h3m1 0h1m5 0h4m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m4 0h3m2 0h1m4 0h1m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h3m7 0h1m3 0h1m2 0h1m1 0h1m2 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h1m7 0h1m2 0h2m5 0h1m1 0h1m-29 1h1m1 0h5m2 0h1m1 0h1m3 0h1m2 0h5m1 0h3m3 0h5m-35 1h3m1 0h2m3 0h2m4 0h3m17 0h1m-36 1h1m2 0h1m1 0h2m2 0h1m2 0h2m3 0h1m2 0h1m1 0h7m1 0h1m2 0h1m1 0h2m-37 1h2m2 0h2m4 0h1m1 0h2m2 0h1m4 0h1m1 0h1m4 0h2m1 0h1m4 0h1m-37 1h2m3 0h2m9 0h3m3 0h5m2 0h4m1 0h3m-37 1h5m2 0h6m1 0h1m1 0h4m1 0h1m1 0h1m2 0h1m1 0h1m2 0h1m3 0h1m-33 1h2m1 0h2m3 0h2m1 0h4m3 0h1m2 0h1m2 0h3m1 0h3m1 0h2m-37 1h6m4 0h2m1 0h2m2 0h3m1 0h2m3 0h2m1 0h4m-30 1h4m4 0h1m2 0h3m4 0h1m2 0h4m2 0h3m1 0h1m1 0h1m-37 1h1m2 0h1m1 0h1m1 0h2m2 0h1m3 0h1m1 0h2m1 0h3m1 0h1m1 0h1m2 0h1m1 0h1m1 0h1m1 0h1m-36 1h1m2 0h1m2 0h1m2 0h1m1 0h3m1 0h3m1 0h1m2 0h1m1 0h1m1 0h2m3 0h2m1 0h3m-33 1h1m2 0h2m6 0h1m3 0h4m1 0h1m3 0h1m1 0h1m2 0h1m2 0h1m-37 1h2m2 0h1m1 0h1m4 0h1m1 0h1m1 0h3m1 0h1m2 0h1m1 0h4m1 0h2m1 0h3m-32 1h2m2 0h3m1 0h1m2 0h1m1 0h1m1 0h3m2 0h1m4 0h2m3 0h1m1 0h1m-35 1h1m2 0h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m1 0h2m1 0h4m1 0h2m-37 1h1m2 0h1m1 0h1m3 0h1m2 0h5m3 0h1m2 0h1m7 0h2m2 0h1m-34 1h1m3 0h1m2 0h1m1 0h1m1 0h2m3 0h1m1 0h7m1 0h1m1 0h3m1 0h2m-36 1h1m2 0h1m1 0h1m2 0h1m2 0h3m1 0h2m7 0h1m1 0h1m2 0h1m1 0h1m2 0h1m-35 1h1m1 0h1m2 0h3m1 0h1m4 0h1m2 0h2m1 0h2m4 0h2m2 0h2m3 0h2m-37 1h1m1 0h1m1 0h2m4 0h1m5 0h1m4 0h2m3 0h1m4 0h1m4 0h1m-37 1h1m1 0h8m3 0h1m3 0h1m2 0h1m1 0h4m1 0h8m1 0h1m-29 1h2m1 0h1m2 0h1m2 0h1m1 0h5m3 0h2m3 0h2m-34 1h7m2 0h1m5 0h3m3 0h1m3 0h1m2 0h1m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h2m2 0h2m2 0h3m2 0h4m3 0h1m3 0h2m2 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h4m1 0h2m2 0h1m1 0h1m2 0h9m1 0h1m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h3m4 0h1m2 0h1m1 0h4m1 0h1m3 0h2m1 0h1m3 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h10m1 0h2m3 0h3m4 0h4m-37 1h1m5 0h1m2 0h4m1 0h2m3 0h3m1 0h1m2 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-37 1h7m1 0h2m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h6m2 0h1m1 0h5\"/></g></svg>", "chess": "<svg role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"164\" height=\"164\" class=\"segno\"><g transform=\"scale(4)\"><path fill=\"#fff\" d=\"M0 0h41v41h-41z\"/><path class=\"qrline\" stroke=\"#000\" d=\"M2 2.5h7m5 0h2m1 0h3m3 0h1m6 0h1m1 0h7m-37 1h1m5 0h1m3 0h1m3 0h1m1 0h1m1 0h1m1 0h1m2 0h2m1 0h3m1 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m1 0h4m1 0h1m7 0h1m1 0h1m6 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h4m1 0h3m1 0h1m5 0h1m1 0h4m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h2m1 0h8m1 0h1m4 0h1m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h2m2 0h1m4 0h1m3 0h1m3 0h1m1 0h1m2 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h1m1 0h13m3 0h1m1 0h1m-29 1h1m1 0h5m3 0h1m1 0h1m1 0h3m2 0h1m1 0h1m3 0h2m3 0h5m-35 1h2m2 0h2m3 0h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m1 0h1m1 0h1m10 0h1m-34 1h1m2 0h2m1 0h1m1 0h1m1 0h6m1 0h1m2 0h1m2 0h4m1 0h1m2 0h1m1 0h2m-37 1h2m1 0h1m4 0h1m2 0h2m2 0h1m3 0h3m2 0h1m3 0h2m1 0h1m4 0h1m-37 1h2m3 0h3m2 0h1m1 0h8m2 0h1m1 0h3m2 0h4m1 0h3m-37 1h1m4 0h1m2 0h1m1 0h5m1 0h1m1 0h2m3 0h1m1 0h2m1 0h1m2 0h1m3 0h1m-33 1h4m1 0h1m1 0h7m1 0h1m3 0h1m1 0h1m2 0h3m1 0h3m1 0h2m-36 1h2m2 0h1m2 0h3m1 0h1m1 0h1m4 0h1m7 0h1m1 0h4m-33 1h2m1 0h2m1 0h3m5 0h2m2 0h1m1 0h3m1 0h4m2 0h3m1 0h1m1 0h1m-36 1h4m3 0h1m1 0h8m3 0h1m7 0h1m1 0h1m1 0h1m1 0h1m-36 1h1m1 0h1m3 0h3m2 0h1m2 0h1m2 0h1m2 0h1m1 0h3m1 0h2m3 0h2m1 0h3m-36 1h1m3 0h1m5 0h1m2 0h1m1 0h1m4 0h3m4 0h1m1 0h1m2 0h1m2 0h1m-37 1h2m3 0h2m3 0h1m1 0h2m2 0h2m4 0h6m1 0h2m1 0h3m-34 1h1m1 0h2m3 0h1m1 0h1m2 0h1m2 0h6m1 0h1m4 0h2m3 0h1m1 0h1m-35 1h4m1 0h1m4 0h1m2 0h4m2 0h2m4 0h3m1 0h4m1 0h2m-33 1h1m3 0h1m1 0h3m1 0h5m1 0h4m2 0h1m4 0h2m2 0h1m-34 1h1m3 0h3m1 0h4m2 0h1m4 0h1m1 0h4m1 0h1m1 0h3m1 0h2m-36 1h3m2 0h1m1 0h1m3 0h2m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h1m2 0h1m-35 1h1m2 0h5m1 0h2m4 0h5m1 0h1m2 0h1m1 0h2m2 0h2m3 0h2m-37 1h1m1 0h2m1 0h1m1 0h1m1 0h2m1 0h1m2 0h1m3 0h4m1 0h1m1 0h1m4 0h1m3 0h1m-36 1h1m2 0h2m1 0h2m3 0h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h1m1 0h2m1 0h9m-28 1h6m5 0h2m1 0h2m3 0h2m3 0h2m-34 1h7m2 0h1m1 0h1m3 0h2m1 0h1m3 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h1m1 0h3m3 0h1m6 0h2m1 0h1m1 0h1m3 0h2m2 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m3 0h1m1 0h2m2 0h5m1 0h9m1 0h1m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h3m4 0h1m2 0h3m2 0h2m1 0h1m2 0h1m-36 1h1m1 0h3m1 0h1m1 0h4m1 0h1m3 0h2m1 0h3m3 0h3m4 0h2m1 0h1m-37 1h1m5 0h1m2 0h1m3 0h1m2 0h1m4 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-37 1h7m1 0h1m2 0h1m1 0h1m3 0h1m4 0h1m1 0h4m2 0h1m1 0h5\"/></g></svg>", "cricket": "<svg role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"164\" height=\"164\" class=\"segno\"><g transform=\"scale(4)\"><path fill=\"#fff\" d=\"M0 0h41v41h-41z\"/><path class=\"qrline\" stroke=\"#000\" d=\"M2 2.5h7m4 0h1m2 0h1m2 0h1m3 0h1m6 0h1m1 0h7m-37 1h1m5 0h1m3 0h1m2 0h4m1 0h1m1 0h1m2 0h2m1 0h3m1 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m2 0h1m4 0h1m1 0h1m6 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h2m2 0h2m2 0h2m5 0h1m1 0h4m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m2 0h1m2 0h1m1 0h6m1 0h1m4 0h1m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h2m2 0h2m2 0h2m3 0h1m3 0h1m1 0h1m2 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h2m5 0h8m3 0h1m1 0h1m-29 1h1m1 0h5m3 0h2m1 0h2m1 0h1m2 0h1m1 0h1m2 0h3m3 0h5m-35 1h3m1 0h1m2 0h2m1 0h2m1 0h3m1 0h2m1 0h1m1 0h1m1 0h1m1 0h1m8 0h1m-36 1h3m2 0h2m1 0h1m1 0h4m1 0h3m1 0h1m2 0h1m1 0h5m1 0h1m2 0h1m1 0h2m-37 1h2m3 0h1m1 0h1m4 0h4m3 0h3m2 0h1m3 0h2m1 0h1m4 0h1m-36 1h2m1 0h1m1 0h5m1 0h1m1 0h6m2 0h1m1 0h3m2 0h4m1 0h3m-37 1h2m8 0h3m3 0h1m1 0h2m3 0h1m2 0h1m1 0h1m2 0h1m3 0h1m-35 1h2m3 0h1m1 0h1m2 0h2m1 0h3m1 0h1m3 0h1m1 0h2m1 0h3m1 0h3m1 0h2m-35 1h1m1 0h1m4 0h1m3 0h1m5 0h1m7 0h1m1 0h4m-33 1h3m2 0h2m5 0h2m1 0h1m2 0h1m1 0h3m1 0h4m2 0h3m1 0h1m1 0h1m-37 1h2m2 0h1m2 0h3m3 0h5m3 0h1m2 0h1m4 0h1m1 0h1m1 0h1m1 0h1m-31 1h3m1 0h1m1 0h2m4 0h1m2 0h1m1 0h1m1 0h1m1 0h2m3 0h2m1 0h3m-37 1h2m2 0h1m5 0h1m1 0h1m1 0h1m1 0h1m4 0h2m5 0h1m1 0h1m2 0h1m2 0h1m-37 1h2m3 0h6m1 0h1m1 0h1m1 0h2m4 0h1m1 0h4m1 0h2m1 0h3m-35 1h3m2 0h1m1 0h4m1 0h1m3 0h6m1 0h1m1 0h1m2 0h2m3 0h1m1 0h1m-31 1h4m1 0h1m2 0h1m1 0h3m2 0h2m5 0h2m1 0h4m1 0h2m-37 1h2m2 0h1m2 0h4m2 0h1m1 0h4m1 0h4m2 0h1m4 0h2m2 0h1m-36 1h1m1 0h3m1 0h1m2 0h2m2 0h1m2 0h1m4 0h1m1 0h1m1 0h2m1 0h1m1 0h3m1 0h2m-36 1h2m3 0h1m2 0h3m1 0h4m2 0h1m1 0h1m1 0h2m5 0h1m1 0h1m2 0h1m-35 1h1m2 0h1m1 0h4m1 0h1m4 0h5m1 0h1m4 0h2m2 0h2m3 0h2m-37 1h1m1 0h1m1 0h1m10 0h1m3 0h4m3 0h1m4 0h1m3 0h2m-37 1h1m1 0h1m3 0h2m2 0h2m2 0h2m1 0h1m1 0h2m1 0h1m1 0h2m1 0h8m1 0h1m-29 1h2m3 0h1m5 0h2m1 0h2m3 0h2m3 0h2m-34 1h7m2 0h3m2 0h3m1 0h1m3 0h1m2 0h1m2 0h1m1 0h1m1 0h1m1 0h3m-37 1h1m5 0h1m1 0h1m1 0h3m1 0h1m1 0h1m6 0h2m1 0h1m1 0h1m3 0h2m2 0h1m-37 1h1m1 0h3m1 0h1m1 0h2m3 0h3m2 0h5m1 0h9m1 0h1m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h1m1 0h1m3 0h3m4 0h1m1 0h1m1 0h1m3 0h2m1 0h1m3 0h1m-37 1h1m1 0h3m1 0h1m1 0h3m2 0h2m2 0h2m1 0h3m3 0h3m4 0h4m-37 1h1m5 0h1m2 0h1m3 0h1m2 0h1m4 0h1m1 0h2m1 0h1m1 0h1m1 0h1m1 0h1m3 0h1m-37 1h7m1 0h1m2 0h2m4 0h1m4 0h6m2 0h1m1 0h5\"/></g></svg>", "volleyball": "<svg role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" width=\"164\" height=\"164\" class=\"segno\"><g transform=\"scale(4)\"><path fill=\"#fff\" d=\"M0 0h41v41h-41z\"/><path class=\"qrline\" stroke=\"#000\" d=\"M2 2.5h7m1 0h1m2 0h1m1 0h1m1 0h5m3 0h1m1 0h1m1 0h2m1 0h7m-37 1h1m5 0h1m3 0h1m1 0h1m5 0h1m1 0h2m2 0h2m2 0h1m1 0h1m5 0h1m-37 1h1m1 0h3m1 0h1m2 0h3m1 0h12m3 0h1m1 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h2m3 0h3m2 0h2m2 0h1m1 0h4m2 0h1m1 0h3m1 0h1m-37 1h1m1 0h3m1 0h1m1 0h4m2 0h1m3 0h1m2 0h1m1 0h1m1 0h4m1 0h1m1 0h3m1 0h1m-37 1h1m5 0h1m1 0h3m7 0h3m1 0h1m7 0h1m5 0h1m-37 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-29 1h4m1 0h1m1 0h10m-25 1h1m3 0h1m1 0h4m1 0h1m2 0h2m2 0h1m5 0h1m2 0h1m1 0h5m2 0h1m-37 1h5m2 0h4m2 0h2m1 0h2m1 0h3m1 0h1m1 0h3m3 0h3m1 0h1m-34 1h2m2 0h3m5 0h1m1 0h1m1 0h1m1 0h1m2 0h5m1 0h1m3 0h2m-32 1h3m1 0h1m1 0h4m4 0h2m2 0h3m6 0h2m2 0h2m-36 1h3m2 0h2m1 0h1m1 0h1m4 0h8m1 0h1m2 0h1m1 0h2m2 0h4m-36 1h4m3 0h2m3 0h1m1 0h4m1 0h1m2 0h1m3 0h2m3 0h2m1 0h1m-36 1h1m1 0h1m2 0h2m1 0h1m1 0h3m1 0h2m2 0h1m2 0h3m1 0h3m2 0h5m-33 1h1m1 0h2m1 0h2m2 0h3m2 0h1m2 0h1m1 0h4m1 0h3m2 0h2m1 0h3m-36 1h2m1 0h4m1 0h1m6 0h1m2 0h2m3 0h1m5 0h1m2 0h2m1 0h1m-34 1h1m1 0h1m3 0h1m1 0h1m2 0h1m2 0h3m3 0h1m1 0h3m1 0h1m2 0h1m2 0h1m-36 1h3m2 0h2m1 0h1m3 0h1m1 0h2m2 0h2m3 0h1m2 0h7m-33 1h1m2 0h2m2 0h2m1 0h1m1 0h1m2 0h7m7 0h1m3 0h3m-36 1h3m3 0h2m2 0h1m1 0h2m2 0h2m2 0h3m1 0h1m4 0h3m2 0h1m-35 1h4m1 0h1m3 0h1m5 0h2m1 0h1m2 0h1m1 0h1m2 0h4m1 0h2m2 0h1m-30 1h1m2 0h2m1 0h2m1 0h1m1 0h1m2 0h1m2 0h2m1 0h2m1 0h1m1 0h4m-32 1h1m1 0h1m4 0h1m1 0h1m1 0h2m1 0h2m1 0h1m1 0h1m1 0h1m3 0h5m1 0h1m1 0h1m-37 1h2m3 0h2m1 0h1m2 0h1m1 0h1m1 0h1m2 0h2m2 0h3m2 0h2m1 0h1m2 0h3m-36 1h4m3 0h1m2 0h3m1 0h1m1 0h1m2 0h3m1 0h1m1 0h3m1 0h1m2 0h3m-33 1h1m1 0h4m3 0h2m1 0h1m1 0h1m3 0h5m1 0h4m1 0h1m2 0h1m-32 1h3m2 0h3m1 0h1m4 0h2m2 0h1m1 0h1m2 0h1m1 0h4m2 0h2m-36 1h3m1 0h1m1 0h2m1 0h3m2 0h2m1 0h1m1 0h1m1 0h4m1 0h1m1 0h5m1 0h3m-29 1h3m3 0h2m1 0h1m4 0h2m2 0h1m1 0h1m3 0h1m-33 1h7m1 0h1m2 0h1m1 0h1m1 0h1m2 0h1m2 0h4m1 0h1m1 0h1m1 0h1m1 0h1m-33 1h1m5 0h1m2 0h3m1 0h1m7 0h1m6 0h1m3 0h4m-36 1h1m1 0h3m1 0h1m1 0h1m3 0h3m1 0h1m3 0h1m7 0h7m1 0h1m-37 1h1m1 0h3m1 0h1m2 0h2m2 0h2m3 0h2m2 0h2m2 0h2m1 0h3m1 0h1m2 0h1m-37 1h1m1 0h3m1 0h1m2 0h2m1 0h1m2 0h1m3 0h1m1 0h1m1 0h2m1 0h2m1 0h2m2 0h1m-34 1h1m5 0h1m2 0h3m1 0h12m1 0h1m2 0h1m2 0h1m1 0h2m-36 1h7m1 0h3m6 0h1m2 0h3m1 0h1m5 0h2m2 0h3\"/></g></svg>"};
-const BASE = "https://shrikantfte-coder.github.io/csg-sports-fest-2026/";
-const SPORTS = [
-  {id:"table-tennis", key:"tt", name:"Table Tennis", c:"--tt"},
-  {id:"carrom", key:"carrom", name:"Carrom", c:"--carrom"},
-  {id:"chess", key:"chess", name:"Chess", c:"--chess"},
-  {id:"cricket", key:"cricket", name:"Cricket", c:"--cricket"},
-  {id:"volleyball", key:"volleyball", name:"Volleyball", c:"--volley"},
-];
-const OFFICE = "CSG Office premises";
-const CRICKET_MAP = "https://maps.app.goo.gl/8DuRAhPuMddGuS2p8";
-const VOLLEY_MAP = "https://maps.app.goo.gl/tTLeYtSKwnfJVtUPA";
-const TT_EVENTS = {MS:"Men's Singles", WS:"Women's Singles", MD:"Men's Doubles", WD:"Women's Doubles"};
-const CARROM_ROUNDS = {R1:"Round 1", R2:"Round 2", R3:"Round 3", RR:"Round Robin", FINAL:"Final"};
-
-const $ = s => document.querySelector(s);
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const pad = n => String(n).padStart(2,"0");
-const todayISO = (()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`})();
-const fmtDay = iso => { const d=new Date(iso+"T12:00:00"); return d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); };
-const norm = s => String(s).toLowerCase().replace(/[^\p{L}\p{N}\p{M}]/gu,"").replace(/h/g,"");
-const titleCase = s => s.replace(/\b([a-z])/g, (m,c)=>c.toUpperCase());
-const isTBD = s => /^(Winner of|1st in|2nd in)/.test(s);
-const sportBy = k => SPORTS.find(s=>s.key===k||s.id===k);
-const pageURL = id => BASE + (id ? "#"+id : "");
-
-/* ---------- Unified match list ---------- */
-let MATCHES = [];
-function buildMatches(){
-MATCHES = [];
-D.tt.forEach(r => MATCHES.push({sport:"tt", date:r.date, time:r.start, end:r.end, id:r.id, tag:r.event, a:r.a, b:r.b, ref:r.ref, label:TT_EVENTS[r.event], result:r.result}));
-D.carrom.forEach(r => MATCHES.push({sport:"carrom", date:r.date, time:r.time, id:r.id, tag:r.round, a:r.a, b:r.b, label:CARROM_ROUNDS[r.round], result:r.result}));
-D.chess.forEach(r => MATCHES.push({sport:"chess", date:r.date, time:r.slot.split("–")[0].trim()+" PM", slot:r.slot, id:r.no?("#"+r.no):"", tag:r.group?("Grp "+r.group):"", a:r.a, b:r.b, board:r.board, round:r.round, label:r.group?`Group ${r.group} · ${r.round} · Board ${r.board}`:"Tie-breaks", result:r.result}));
-[["cricket","cricketFixtures"],["volleyball","volleyballFixtures"]].forEach(([k,f]) => (D[f]||[]).forEach(r => MATCHES.push({sport:k, date:r.date, time:r.time, id:r.id, tag:r.stage, a:r.a, b:r.b, label:r.stage, result:r.result})));
-MATCHES.sort((x,y)=>x.date.localeCompare(y.date));
-}
-const toMin = t => { const m=/(\d+):(\d+)\s*(AM|PM)?/.exec(t); if(!m) return 0; let h=+m[1]%12; if(m[3]!=="AM") h+=12; return h*60+ +m[2]; };
-const byTime = (x,y) => x.date.localeCompare(y.date) || toMin(x.time)-toMin(y.time);
-
-/* ---------- Rendering helpers ---------- */
-function hl(text, q){
-  if(!q) return esc(text);
-  // highlight using normalised match on words
-  const words = String(text).split(/(\s+)/);
-  return words.map(w => (w.trim() && norm(w) && (norm(w).includes(q) || q.includes(norm(w)) && norm(w).length>2) ) ? `<mark>${esc(w)}</mark>` : esc(w)).join("");
-}
-function side(name, q){
-  if(!name) return "";
-  return isTBD(name) ? `<span class="tbd">${esc(name)}</span>` : `<span>${hl(name,q)}</span>`;
-}
-function matchRow(m, q, opts={}){
-  const sp = sportBy(m.sport);
-  const when = opts.withDate ? `${esc(m.time)}<small>${fmtDay(m.date)}</small>` : `${esc(m.time)}${m.end?`<small>to ${esc(m.end)}</small>`:""}`;
-  const vs = m.b ? `${side(m.a,q)}<i>vs</i>${side(m.b,q)}` : `<span class="tbd">${esc(m.a)}</span>`;
-  const tag = opts.withSport ? sp.name : m.tag;
-  const sub = opts.withSport ? `${esc(m.label||"")}${m.id?" · "+esc(m.id):""}` : `${esc(m.id)}${m.board?(/^\d/.test(m.board)?` · Board ${esc(m.board)}`:esc(m.board)):""}`;
-  const ref = (m.ref ? `<div class="ref">Referee: ${hl(m.ref,q)}</div>` : "") + (m.result ? `<div class="ref res-line">Result: <b>${esc(m.result)}</b></div>` : "");
-  return `<div class="m" style="--accent:var(${sp.c})"><div class="t">${when}</div><div class="vs">${vs}</div><div class="meta">${tag?`<span class="tag">${esc(tag)}</span><br>`:""}${sub}</div>${ref}</div>`;
-}
-function dayBlocks(list, {slots=false}={}){
-  const days = {};
-  list.forEach(m => (days[m.date] ||= []).push(m));
-  return Object.keys(days).sort().map(d => {
-    const ms = days[d];
-    const today = d===todayISO, past = d<todayISO;
-    let body = "", lastSlot = null;
-    ms.forEach(m => {
-      if(slots && m.slot!==lastSlot){ body += `<div class="slot">${esc(m.slot)}</div>`; lastSlot = m.slot; }
-      body += matchRow(m);
-    });
-    return `<section class="day${today?" is-today":""}" ${today?'id="today"':""}><div class="day-h"><span class="d">${fmtDay(d)}</span>${today?'<span class="badge">Today</span>':past?'<span class="done">Played</span>':""}<span class="n">${ms.length} ${ms.length===1?"match":"matches"}</span></div>${body}</section>`;
-  }).join("");
-}
-function fact(label, html){ return `<div class="fact"><b>${label}</b>${html}</div>`; }
-function mapLink(url, text="Open in Google Maps"){ return `<a href="${url}" target="_blank" rel="noopener">${text} ↗</a>`; }
-function qrBlock(id, name){
-  const svg = QR[id||"all"];
-  if(!svg) return "";
-  const url = pageURL(id);
-  return `<section class="mine"><div class="code" aria-label="QR code for ${esc(name)}">${svg}</div><div><h3>Share this page</h3><p>${esc(url)}</p><button class="copy" type="button" data-copy="${esc(url)}">Copy link</button></div></section>`;
-}
-
-/* ---------- Views ---------- */
-let filter = {};
-function viewTT(){
-  const ev = filter.tt || "all";
-  const list = MATCHES.filter(m=>m.sport==="tt" && (ev==="all"||m.tag===ev));
-  const chips = ["all","MS","WS","MD","WD"].map(k=>`<button class="chip" data-f="tt" data-v="${k}" aria-pressed="${ev===k}">${k==="all"?"All events":TT_EVENTS[k]}</button>`).join("");
-  const players = {};
-  D.tt.forEach(r => [r.a,r.b].forEach(p => (players[r.event] ||= new Set()).add(p)));
-  const teams = ["MS","WS","MD","WD"].map(k=>`<div class="team"><h4>${TT_EVENTS[k]}<small>${players[k].size} ${k.endsWith("D")?"pairs":"players"}</small></h4><ul>${[...players[k]].sort((a,b)=>a.localeCompare(b)).map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`).join("");
-  return `
-  <div class="hero"><div class="eyebrow">League stage · 66 matches</div><h2>Table Tennis</h2>
-    <div class="facts">${fact("Venue",OFFICE)}${fact("Dates","23 Nov – 2 Dec 2026")}${fact("Time","From 5:30 PM, 5 to 15 min matches")}${fact("Events","Men's &amp; Women's Singles and Doubles")}</div></div>
-  <section class="sec"><div class="sec-h"><h3>Fixtures</h3><span>League matches only. Knock-out fixtures to follow.</span></div><div class="chips">${chips}</div>${dayBlocks(list)}</section>
-  <section class="sec"><div class="sec-h"><h3>Players &amp; pairs</h3></div><div class="grid">${teams}</div></section>
-  ${qrBlock("table-tennis","Table Tennis")}`;
-}
-function viewCarrom(){
-  const rd = filter.carrom || "all";
-  const list = MATCHES.filter(m=>m.sport==="carrom" && (rd==="all"||m.tag===rd));
-  const chips = ["all","R1","R2","R3","RR","FINAL"].map(k=>`<button class="chip" data-f="carrom" data-v="${k}" aria-pressed="${rd===k}">${k==="all"?"All rounds":CARROM_ROUNDS[k]}</button>`).join("");
-  const teams = D.carromTeams.map(t=>`<div><b>${pad(t.no)}</b><span>${esc(t.name)}${t.tbc?' <span style="color:var(--muted)">(name TBC)</span>':""}</span><em>${esc(t.r1)}</em></div>`).join("");
-  return `
-  <div class="hero"><div class="eyebrow">40 doubles teams · 46 matches</div><h2>Carrom</h2>
-    <div class="facts">${fact("Venue",OFFICE+", 2 boards")}${fact("Dates","23 Nov – 9 Dec 2026, Mon to Fri")}${fact("Time","5:00 – 7:00 PM, 30 min matches")}${fact("Final","Wed 9 Dec, 5:00 PM")}</div>
-    <div class="note">Round 1 (40 → 20), Round 2 (20 → 10), Round 3 (10 → 5), then the 5 winners play a round robin (win = 2 points). The top 2 play the final. A team wins when all its coins are pocketed.</div></div>
-  <section class="sec"><div class="sec-h"><h3>Fixtures</h3><span>“Winner of Mxx” fills in as results come</span></div><div class="chips">${chips}</div>${dayBlocks(list)}</section>
-  <section class="sec"><div class="sec-h"><h3>Teams</h3><span>Team number · name · Round 1 match</span></div><div class="ct">${teams}</div></section>
-  ${qrBlock("carrom","Carrom")}`;
-}
-function viewChess(){
-  const g = filter.chess || "all";
-  const list = MATCHES.filter(m=>m.sport==="chess" && (g==="all"||m.tag==="Grp "+g||(!m.tag)));
-  const chips = ["all",...Object.keys(D.chessGroups)].map(k=>`<button class="chip" data-f="chess" data-v="${k}" aria-pressed="${g===k}">${k==="all"?"All groups":"Group "+k}</button>`).join("");
-  const groups = Object.entries(D.chessGroups).map(([k,ps])=>`<div class="team"><h4>Group ${k}<small>${ps.length} players</small></h4><ul>${ps.map(p=>`<li>${esc(titleCase(p))}</li>`).join("")}</ul><div class="plays">Plays ${D.chessPlays[k]}</div></div>`).join("");
-  return `
-  <div class="hero"><div class="eyebrow">League stage · 34 players · 8 groups</div><h2>Chess</h2>
-    <div class="facts">${fact("Venue",OFFICE+", 4 boards")}${fact("Dates","23 – 26 Nov 2026")}${fact("Time","4:00 – 6:30 PM")}${fact("Time control","15 min per player")}</div>
-    <div class="note">One game per player per day. Win 1, draw ½, loss 0. Top 2 from each group (16 players) go to the knock-out, which will be shared after the league. Ties: head-to-head, then wins, then a 5 min blitz playoff on Thu 26 Nov at 6:00 PM. Both players sign the result sheet and post the result in the WhatsApp group.</div></div>
-  <section class="sec"><div class="sec-h"><h3>Fixtures</h3><span>Games start at 4:00, 4:40, 5:20 and 6:00 PM</span></div><div class="chips">${chips}</div>${dayBlocks(list,{slots:true})}</section>
-  <section class="sec"><div class="sec-h"><h3>Groups</h3></div><div class="grid">${groups}</div></section>
-  ${qrBlock("chess","Chess")}`;
-}
-function fixturesOrSoon(k){
-  const list = MATCHES.filter(m=>m.sport===k);
-  if(!list.length) return `<div class="soon"><h3>Fixtures coming soon</h3><p>Match dates and times will be posted here once they are ready.</p></div>`;
-  return `<section class="sec"><div class="sec-h"><h3>Fixtures</h3><span>${list.length} matches</span></div>${dayBlocks(list)}</section>`;
-}
-function dateRange(k){
-  const ds = MATCHES.filter(m=>m.sport===k).map(m=>m.date).sort();
-  if(!ds.length) return "To be announced";
-  return ds[0]===ds[ds.length-1] ? fmtDay(ds[0]) : `${fmtDay(ds[0])} – ${fmtDay(ds[ds.length-1])}`;
-}
-function viewCricket(){
-  const teams = D.cricket.map(t=>`<div class="team"><h4>${esc(t.name)}<small>${t.players.length} players</small></h4><ol>${t.players.map(p=>`<li>${esc(p)}</li>`).join("")}</ol></div>`).join("");
-  return `
-  <div class="hero"><div class="eyebrow">6 teams</div><h2>Cricket</h2>
-    <div class="facts">${fact("Venue",`Invictus Sports Arena<br><span style="color:var(--muted);font-size:.9rem">#118 Chikkabanavara, North, Hesarghatta Rd, Chikkabanavara, Karnataka 560090</span><br>${mapLink(CRICKET_MAP)}`)}${fact("Dates",dateRange("cricket"))}</div></div>
-  ${fixturesOrSoon("cricket")}
-  <section class="sec"><div class="sec-h"><h3>Teams</h3><span>From the player auction</span></div><div class="grid">${teams}</div></section>
-  ${qrBlock("cricket","Cricket")}`;
-}
-function viewVolley(){
-  const teams = D.volleyball.map(t=>`<div class="team"><h4>${esc(t.name)}<small>${t.players.length} players</small></h4><ol>${t.players.map(([p,r])=>`<li>${esc(p)}${r?` <span>· ${esc(r)}</span>`:""}</li>`).join("")}</ol></div>`).join("");
-  return `
-  <div class="hero"><div class="eyebrow">CSG Volleyball League · 6 teams</div><h2>Volleyball</h2>
-    <div class="facts">${fact("Venue",`Volleyball ground<br>${mapLink(VOLLEY_MAP)}`)}${fact("Dates",dateRange("volleyball"))}</div></div>
-  ${fixturesOrSoon("volleyball")}
-  <section class="sec"><div class="sec-h"><h3>Teams</h3><span>Playing position shown where the player listed one</span></div><div class="grid">${teams}</div></section>
-  ${qrBlock("volleyball","Volleyball")}`;
-}
-function viewAll(){
-  const upcoming = MATCHES.filter(m=>m.date>=todayISO).sort(byTime);
-  const nextDay = upcoming.length ? upcoming[0].date : null;
-  const dayList = nextDay ? upcoming.filter(m=>m.date===nextDay) : [];
-  const info = {
-    tt:["Fixtures out","23 Nov – 2 Dec · from 5:30 PM",OFFICE,"66 league matches"],
-    carrom:["Fixtures out","23 Nov – 9 Dec · 5:00 – 7:00 PM",OFFICE,"40 teams · 46 matches"],
-    chess:["Fixtures out","23 – 26 Nov · 4:00 – 6:30 PM",OFFICE,"34 players · 51 games"],
-    cricket:(D.cricketFixtures||[]).length?["Fixtures out",dateRange("cricket"),"Invictus Sports Arena, Hesarghatta Rd",`${D.cricket.length} teams · ${D.cricketFixtures.length} matches`]:["Fixtures coming soon","Dates to be announced","Invictus Sports Arena, Hesarghatta Rd",`${D.cricket.length} teams`],
-    volleyball:(D.volleyballFixtures||[]).length?["Fixtures out",dateRange("volleyball"),"Volleyball ground",`${D.volleyball.length} teams · ${D.volleyballFixtures.length} matches`]:["Fixtures coming soon","Dates to be announced","Volleyball ground",`${D.volleyball.length} teams`],
-  };
-  const cards = SPORTS.map(s=>{const i=info[s.key];return `<a class="card" href="#${s.id}" style="--c:var(${s.c})"><span class="st">${i[0]}</span><h3>${s.name}</h3><p>${i[1]}<br>${i[2]}<br>${i[3]}</p><span class="go">View ${info[s.key][0]==="Fixtures out"?"fixtures":"teams & venue"} →</span></a>`}).join("");
-  const qrs = [{id:"",name:"All sports",c:"--all"},...SPORTS].map(s=>QR[s.id||"all"]?`<div class="qr" style="--c:var(${s.c})"><div class="code">${QR[s.id||"all"]}</div><b>${s.name}</b><button class="copy" type="button" data-copy="${esc(pageURL(s.id))}">Copy link</button></div>`:"").join("");
-  const nextTitle = nextDay===todayISO ? "Today's matches" : nextDay ? `Next match day · ${fmtDay(nextDay)}` : "All matches played";
-  const nextBody = dayList.length ? `<section class="day${nextDay===todayISO?" is-today":""}">${dayList.map(m=>matchRow(m,"",{withSport:true})).join("")}</section>` : `<div class="note">No more scheduled matches. Check each sport for results.</div>`;
-  return `
-  <div class="intro"><h2>Sports Fest 2026</h2><p>Fixtures, teams and venues for every sport. Type your name in the search box above to see all your games and timings.</p></div>
-  <div class="sports">${cards}</div>
-  <section class="sec" style="--accent:var(--today)"><div class="sec-h"><h3>${nextTitle}</h3><span>${dayList.length} matches across sports</span></div>${nextBody}</section>
-  <section class="sec"><div class="sec-h"><h3>Scan to open</h3><span>QR codes for each sport page</span></div>${qrs?`<div class="qrs">${qrs}</div>`:`<div class="note">QR codes will appear here.</div>`}</section>`;
-}
-
-/* ---------- Search ---------- */
-let PEOPLE = [];
-function buildPeople(){ PEOPLE = (() => {
-  const P = new Map();
-  const add = (name, role) => {
-    const k = norm(name); if(!k) return;
-    if(!P.has(k)) P.set(k,{name:titleCase(name),roles:[],matches:[]});
-    const p = P.get(k); if(!p.roles.some(r=>r.text===role.text&&r.sport===role.sport)) p.roles.push(role);
-    return p;
-  };
-  D.tt.forEach(r=>{
-    const ev = TT_EVENTS[r.event], dbl = r.event.endsWith("D");
-    [r.a,r.b].forEach(n=>add(n,{sport:"tt",text:`Table Tennis · ${ev}${dbl?" (team)":""}`}));
-    add(r.ref,{sport:"tt",text:"Table Tennis · Referee"});
-  });
-  D.carromTeams.forEach(t=>add(t.name,{sport:"carrom",text:`Carrom · Team ${pad(t.no)}`}));
-  Object.entries(D.chessGroups).forEach(([g,ps])=>ps.forEach(n=>add(n,{sport:"chess",text:`Chess · Group ${g}`})));
-  D.cricket.forEach(t=>{ add(t.name,{sport:"cricket",text:"Cricket · Team"}); t.players.forEach(n=>add(n,{sport:"cricket",text:`Cricket · ${t.name}`})); });
-  D.volleyball.forEach(t=>{ add(t.name,{sport:"volleyball",text:"Volleyball · Team"}); t.players.forEach(([n,r])=>add(n,{sport:"volleyball",text:`Volleyball · ${t.name}${r?" · "+r:""}`})); });
-  MATCHES.forEach(m=>{
-    [m.a,m.b].forEach(n=>{ if(n && !isTBD(n) && P.has(norm(n))) P.get(norm(n)).matches.push(m); });
-    if(m.ref && P.has(norm(m.ref))) P.get(norm(m.ref)).matches.push({...m, asRef:true});
-  });
-  // team members inherit their cricket / volleyball team's matches
-  [["cricket",D.cricket,t=>t.players],["volleyball",D.volleyball,t=>t.players.map(x=>x[0])]].forEach(([k,teams,get])=>teams.forEach(t=>{
-    const tm = MATCHES.filter(m=>m.sport===k && (norm(m.a)===norm(t.name)||norm(m.b)===norm(t.name)));
-    if(tm.length) get(t).forEach(n=>{ const p=P.get(norm(n)); if(p) tm.forEach(m=>{ if(!p.matches.includes(m)) p.matches.push(m); }); });
-  }));
-  return [...P.values()];
-})(); }
-function viewSearch(raw){
-  const q = norm(raw);
-  if(q.length<2) return `<div class="empty">Type at least 2 letters of a name or team.</div>`;
-  const hits = PEOPLE.filter(p=>norm(p.name).includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
-  if(!hits.length) return `<div class="empty">No player or team matches “${esc(raw)}”.<br>Try part of the name, for example the first name only.</div>`;
-  const cards = hits.slice(0,40).map(p=>{
-    const roles = p.roles.map(r=>`<span class="role" style="--c:var(${sportBy(r.sport).c})">${esc(r.text)}</span>`).join("");
-    const ms = p.matches.slice().sort(byTime);
-    const rows = ms.length ? ms.map(m=>{
-      const r = matchRow(m,q,{withDate:true,withSport:true});
-      return m.asRef ? r.replace('<div class="vs">','<div class="vs"><i>Referee:</i> ') : r;
-    }).join("") : `<div class="m"><div class="t">—</div><div class="vs"><span class="tbd">${p.roles.some(r=>r.sport==="cricket"||r.sport==="volleyball")?"Cricket and volleyball fixtures coming soon":"No fixed match yet"}</span></div></div>`;
-    return `<article class="person"><h4>${hl(p.name,q)}</h4><div class="roles">${roles}</div>${rows}</article>`;
-  }).join("");
-  return `<div class="sec-h"><h3>Search results</h3><span>${hits.length} ${hits.length===1?"match":"matches"} for “${esc(raw)}”</span></div><div class="res">${cards}</div>`;
-}
-
-/* ---------- Router ---------- */
-const VIEWS = {"":viewAll,"table-tennis":viewTT,carrom:viewCarrom,chess:viewChess,cricket:viewCricket,volleyball:viewVolley};
-function current(){ const h = location.hash.replace("#",""); return h in VIEWS ? h : ""; }
-function render(){
-  if(!D) return;
-  const id = current(), q = $("#q").value.trim();
-  const sp = sportBy(id);
-  document.documentElement.style.setProperty("--accent", `var(${sp?sp.c:"--all"})`);
-  $("#tabs").innerHTML = [{id:"",name:"All sports",c:"--all"},...SPORTS].map(s=>`<a class="tab" href="#${s.id}" style="--c:var(${s.c})" ${s.id===id?'aria-current="page"':""}>${s.name}</a>`).join("");
-  $("#clear").hidden = !q;
-  $("#app").innerHTML = q ? viewSearch(q) : VIEWS[id]();
-}
-window.addEventListener("hashchange",()=>{ $("#q").value=""; render(); window.scrollTo(0,0); });
-$("#q").addEventListener("input",render);
-$("#clear").addEventListener("click",()=>{ $("#q").value=""; render(); $("#q").focus(); });
-document.addEventListener("click",e=>{
-  const c = e.target.closest("[data-f]");
-  if(c){ filter[c.dataset.f]=c.dataset.v; render(); return; }
-  const b = e.target.closest("[data-copy]");
-  if(b){
-    const t = b.dataset.copy;
-    const done = ()=>{ b.textContent="Copied"; setTimeout(()=>b.textContent="Copy link",1500); };
-    const fail = ()=>{ b.textContent="Copy failed, use the link above"; };
-    try{ navigator.clipboard.writeText(t).then(done,fail); }catch(_){ fail(); }
-  }
-  const a = e.target.closest('a.tab, a.card, .brand a');
-  if(a && $("#q").value){ $("#q").value=""; setTimeout(render,0); }
-});
-async function boot(){
-  try{
-    const r = await fetch("data.json?v="+Date.now(), {cache:"no-store"});
-    if(!r.ok) throw new Error(r.status);
-    D = await r.json();
-  }catch(e){
-    $("#app").innerHTML = `<div class="empty">Could not load the fixtures. Check your connection and refresh the page.</div>`;
-    return;
-  }
-  buildMatches(); buildPeople(); render();
-  if(D.updated) $("#updated").textContent = "Last updated " + new Date(D.updated).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"}) + " · ";
-}
-$("#app").innerHTML = `<div class="empty">Loading fixtures…</div>`;
-boot();
-</script>
 <div class="wrap foot"><span id="updated"></span>CSG Sports Fest 2026 · Timings may change; check with your sport coordinator. · <a href="admin.html">Organiser login</a></div>
-
+<script src="core.js?v=3"></script>
+<script src="site.js?v=3"></script>
 </body>
 </html>

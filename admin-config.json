@@ -1,0 +1,13 @@
+{
+ "v": 1,
+ "note": "Shared organiser login for admin.html. Encrypted with the admin password. Change it from the admin page, not by hand.",
+ "kdf": {
+  "name": "PBKDF2",
+  "hash": "SHA-256",
+  "iterations": 310000,
+  "salt": "IKXRkBq8qcZl6YY0ZftNog=="
+ },
+ "iv": "6b6FVPScUIODV1q6",
+ "data": "2pqvvG9Cnio9vkLLJaOVJFgvwyrD9bysSQZY5mJ5I38mHhlX",
+ "updated": "2026-11-23T08:01:17.939Z"
+}

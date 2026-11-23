@@ -8,26 +8,27 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: one column admin console with four tabs; wide edit tables scroll inside their own box. */
+/* Layout: one-column admin console. Winners are big tap targets for phones at the venue; wide edit tables scroll inside their own box. */
 :root{
   --bg:#f4f6f8; --surface:#ffffff; --sunk:#eceff3; --fg:#141922; --muted:#5a6473; --line:#dde2e8;
-  --accent:#1d63c4; --ok:#1c7f47; --warn:#b85c00; --bad:#c62f2f; --changed:#fff6dc;
+  --accent:#1d63c4; --ok:#17773f; --ok-bg:#e2f3e8; --warn:#a85400; --bad:#c62f2f; --changed:#fff6dc;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root{
   --bg:#0e1116; --surface:#171b22; --sunk:#1f242d; --fg:#eef1f5; --muted:#9ba4b3; --line:#2b313b;
-  --accent:#6aa8ff; --ok:#4fc985; --warn:#ffb057; --bad:#ff7a7a; --changed:#2c2510; color-scheme:dark}}
+  --accent:#6aa8ff; --ok:#5fd394; --ok-bg:#15301f; --warn:#ffb057; --bad:#ff7a7a; --changed:#2c2510; color-scheme:dark}}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
 .wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 h1,h2,h3{font-family:var(--display);font-weight:700;text-transform:uppercase;margin:0;line-height:1.05;letter-spacing:.01em}
+h2{font-size:1.8rem}
 a{color:var(--accent)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 button,select,input,textarea{font:inherit;color:inherit}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 .btn.danger{color:var(--bad)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -36,25 +37,49 @@ button,select,input,textarea{font:inherit;color:inherit}
 .note{background:var(--sunk);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:.93rem}
 .note b{color:var(--fg)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grow{flex:1}
 
 /* login */
 #login{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
 .login{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:24px;width:100%;max-width:360px;display:grid;gap:12px}
 .login h1{font-size:2rem}
-.login input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk)}
+.login label{display:grid;gap:4px;font-weight:600;font-size:.9rem}
+.login input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk);font-weight:400}
 .err{color:var(--bad);font-size:.9rem;min-height:1.2em}
 
 /* shell */
 header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-.bar{display:flex;align-items:center;gap:12px;padding-block:12px;flex-wrap:wrap}
+.bar{display:flex;align-items:center;gap:10px;padding-block:12px;flex-wrap:wrap}
 .bar h1{font-size:1.5rem}
-.bar .sp{flex:1}
-.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px}
+.who{font-size:.85rem;color:var(--muted)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none}
 .tab{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;cursor:pointer}
 .tab[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.pill{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--changed);color:var(--warn)}
-main{padding-block:20px 60px;display:grid;gap:20px}
+.pill{font-size:.8rem;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--changed);color:var(--warn);border:0;cursor:pointer}
+main{padding-block:20px 40px;display:grid;gap:20px}
 .panel{display:grid;gap:16px}
+
+/* winners */
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-weight:600;font-size:.88rem;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip small{font-weight:700;margin-left:4px;opacity:.8}
+.wlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px}
+.wcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px;align-content:start}
+.wcard.done{border-color:var(--ok)}
+.wmeta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.85rem;color:var(--muted);font-weight:600}
+.wmeta .saved{margin-left:auto;color:var(--ok)}
+.picks{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch}
+.picks .vs{align-self:center;color:var(--muted);font-size:.85rem}
+.pick{border:2px solid var(--line);background:var(--sunk);border-radius:12px;padding:10px 8px;font-weight:700;cursor:pointer;min-height:58px;display:grid;place-content:center;gap:2px;text-align:center;overflow-wrap:anywhere}
+.pick small{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+.pick.on{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.pick:disabled{cursor:not-allowed;opacity:.55}
+.pick.draw{min-height:40px;padding:6px}
+.score{width:100%;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:8px 10px}
+.hint{margin:0;font-size:.85rem;color:var(--warn)}
+.pubbar{position:sticky;bottom:0;z-index:4;background:var(--surface);border-top:1px solid var(--line);padding-top:10px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
+.pubbar .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
 /* QR */
 .qrs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
@@ -74,17 +99,21 @@ td input:focus,td select:focus{border-color:var(--accent);background:var(--sunk)
 td.w-l input{min-width:170px}
 td.w-s input{min-width:60px;max-width:80px}
 td.w-d input{min-width:135px}
+td.w-w select{min-width:110px}
 tr.changed td{background:var(--changed)}
 .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
 .team{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:8px}
 .team input,.team textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:var(--sunk);padding:8px}
 .team textarea{min-height:190px;resize:vertical;line-height:1.5}
 .team label{font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px;max-width:720px}
+.card h3{font-size:1.35rem}
 .field{display:grid;gap:4px;max-width:520px}
-.field input{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
-.status{font-weight:600}
+.field label{font-weight:600;font-size:.9rem}
+.field input{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk)}
+.status{font-weight:600;margin:0}
 .status.ok{color:var(--ok)} .status.bad{color:var(--bad)} .status.warn{color:var(--warn)}
-ol.steps{margin:0;padding-left:1.2em;display:grid;gap:4px}
+ol.steps,ul.list{margin:0;padding-left:1.2em;display:grid;gap:4px}
 
 /* print */
 #print{display:none}
@@ -113,10 +142,11 @@ ol.steps{margin:0;padding-left:1.2em;display:grid;gap:4px}
 <section id="login">
   <form class="login" id="loginForm">
     <h1>Organiser login</h1>
-    <p class="muted" style="margin:0">CSG Sports Fest 2026 admin. Enter the organiser passcode.</p>
-    <input id="pass" type="password" autocomplete="current-password" placeholder="Passcode" aria-label="Passcode" required>
-    <div class="err" id="loginErr"></div>
-    <button class="btn primary" type="submit">Log in</button>
+    <p class="muted" style="margin:0">CSG Sports Fest 2026 admin</p>
+    <label for="user">Username<input id="user" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+    <label for="pass">Password<input id="pass" type="password" autocomplete="current-password" required></label>
+    <div class="err" id="loginErr" role="alert"></div>
+    <button class="btn primary" id="loginBtn" type="submit" style="justify-content:center">Log in</button>
     <a href="./" class="muted" style="font-size:.9rem">← Back to the fest site</a>
   </form>
 </section>
@@ -124,25 +154,26 @@ ol.steps{margin:0;padding-left:1.2em;display:grid;gap:4px}
 <div id="app" hidden>
   <header>
     <div class="wrap">
-      <div class="bar"><h1>Sports Fest Admin</h1><span class="pill" id="dirty" hidden></span><span class="sp"></span><a class="btn small" href="./" target="_blank" rel="noopener">Open site ↗</a><button class="btn small" id="logout" type="button">Log out</button></div>
+      <div class="bar"><h1>Sports Fest Admin</h1><button class="pill" id="dirty" data-tab="publish" hidden></button><span class="grow"></span><span class="who" id="who"></span><a class="btn small" href="./" target="_blank" rel="noopener">Open site ↗</a><button class="btn small" id="logout" type="button">Log out</button></div>
       <nav class="tabs" role="tablist">
-        <button class="tab" role="tab" data-tab="qr" aria-selected="true">QR codes &amp; links</button>
-        <button class="tab" role="tab" data-tab="fixtures">Fixtures &amp; results</button>
+        <button class="tab" role="tab" data-tab="winners">Update winners</button>
+        <button class="tab" role="tab" data-tab="fixtures">Fixtures</button>
         <button class="tab" role="tab" data-tab="teams">Teams</button>
-        <button class="tab" role="tab" data-tab="publish">Publish changes</button>
+        <button class="tab" role="tab" data-tab="qr">QR codes &amp; links</button>
+        <button class="tab" role="tab" data-tab="publish">Publish</button>
+        <button class="tab" role="tab" data-tab="settings">Login &amp; settings</button>
       </nav>
     </div>
   </header>
   <main class="wrap" id="main"></main>
+  <div class="pubbar" id="pubbar" hidden><div class="wrap"><b id="pubbarText"></b><span class="grow"></span><span class="status" id="pubbarStatus" aria-live="polite"></span><button class="btn primary" id="publishNow" type="button">Publish now</button></div></div>
 </div>
 
 <div id="print"></div>
 
+<script src="core.js?v=3"></script>
 <script>
-/* Passcode check happens in the browser. It keeps casual visitors out of this screen;
-   the real protection for changes is the GitHub token, which only organisers have. */
-const PASS_HASH = "c5651391d7a4b0d4e707373c5ff35c4c0f1207aaf0384008c3e012b65a2af3e1";
-const OWNER = "shrikantfte-coder", REPO = "csg-sports-fest-2026", FILE = "data.json", BRANCH = "main";
+const OWNER = "shrikantfte-coder", REPO = "csg-sports-fest-2026", BRANCH = "main", DATA = "data.json", CONFIG = "admin-config.json";
 const SITE = "https://shrikantfte-coder.github.io/csg-sports-fest-2026/";
 const PAGES = [
   {id:"all", name:"All sports", hash:""},
@@ -152,82 +183,265 @@ const PAGES = [
   {id:"cricket", name:"Cricket", hash:"#cricket"},
   {id:"volleyball", name:"Volleyball", hash:"#volleyball"},
 ];
+const SPORTS = [
+  {list:"tt", name:"Table Tennis", p:"Player", draw:""},
+  {list:"carrom", name:"Carrom", p:"Team", draw:""},
+  {list:"chess", name:"Chess", p:"Player", draw:"Draw"},
+  {list:"cricketFixtures", name:"Cricket", p:"Team", draw:"Tie"},
+  {list:"volleyballFixtures", name:"Volleyball", p:"Team", draw:""},
+];
+const sportOf = list => SPORTS.find(s=>s.list===list);
+const WIN = list => { const s = sportOf(list); return [["","Not played"],["a",s.p+" 1"],["b",s.p+" 2"]].concat(s.draw?[["draw",s.draw]]:[]); };
 const FIX = {
-  tt:{name:"Table Tennis", cols:[["date","Date","date"],["start","Start","t"],["end","End","t"],["event","Event",["MS","WS","MD","WD"]],["id","Match","s"],["a","Player / team 1","l"],["b","Player / team 2","l"],["ref","Referee","l"],["result","Result","l"]]},
-  carrom:{name:"Carrom", cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["round","Round",["R1","R2","R3","RR","FINAL"]],["a","Team 1","l"],["b","Team 2","l"],["result","Result","l"]]},
-  chess:{name:"Chess", cols:[["no","#","s"],["date","Date","date"],["slot","Slot","t"],["group","Group","s"],["round","Round","s"],["board","Board","s"],["a","Player 1","l"],["b","Player 2","l"],["result","Result","l"]]},
-  cricketFixtures:{name:"Cricket", cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["result","Result","l"]]},
-  volleyballFixtures:{name:"Volleyball", cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["result","Result","l"]]},
+  tt:{cols:[["date","Date","date"],["start","Start","t"],["end","End","t"],["event","Event",["MS","WS","MD","WD"]],["stage","Stage",["League","Quarter-final","Semi-final","Final"]],["id","Match","s"],["a","Player / team 1","l"],["b","Player / team 2","l"],["ref","Referee","l"],["winner","Winner","win"],["result","Score / note","l"]]},
+  carrom:{cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["round","Round",["R1","R2","R3","RR","FINAL"]],["a","Team 1","l"],["b","Team 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
+  chess:{cols:[["no","#","s"],["date","Date","date"],["slot","Slot","t"],["group","Group","s"],["round","Round","s"],["board","Board","s"],["a","Player 1","l"],["b","Player 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
+  cricketFixtures:{cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
+  volleyballFixtures:{cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
 };
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const todayISO = (()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`})();
+const fmtDay = iso => { if(!iso) return ""; const d=new Date(iso+"T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); };
+const toMin = t => { const m=/(\d+):(\d+)\s*(AM|PM)?/i.exec(t||""); if(!m) return 0; let h=+m[1]%12; if(!m[3]||m[3].toUpperCase()==="PM") h+=12; return h*60+ +m[2]; };
+const nowMin = () => { const d = new Date(); return d.getHours()*60 + d.getMinutes(); };
 const store = { get(k){ try{ return localStorage.getItem(k); }catch(_){ return null; } }, set(k,v){ try{ v==null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(_){} } };
-const sstore = { get(k){ try{ return sessionStorage.getItem(k); }catch(_){ return null; } }, set(k,v){ try{ sessionStorage.setItem(k,v); }catch(_){} } };
+const sess = { get(){ try{ return JSON.parse(sessionStorage.getItem("fest-admin")); }catch(_){ return null; } }, set(v){ try{ v?sessionStorage.setItem("fest-admin",JSON.stringify(v)):sessionStorage.removeItem("fest-admin"); }catch(_){} } };
 
-let D = null, ORIGINAL = "", SHA = null, tab = "qr", fixSport = "tt", teamSport = "cricket", filterText = "";
+/* Empty winner / score fields are left out, so clearing a result counts as "no change". */
+const rep = (k,v) => (k==="winner"||k==="result") && v==="" ? undefined : v;
+const ser = x => JSON.stringify(x ?? null, rep);
 
-async function sha256(t){
-  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
-  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+let D = null, ORIGINAL = "", SHA = null, SESSION = null;
+let tab = "winners", fixSport = "tt", teamSport = "cricket", filterText = "", winSport = null, winView = null;
+
+/* ---------- encryption for the shared login ----------
+   admin-config.json holds {token} encrypted with AES-GCM. The key comes from the password (PBKDF2, 310,000 rounds)
+   and the username is bound in as extra data, so only the right username + password can open it. */
+const te = new TextEncoder(), td = new TextDecoder();
+const toB64 = bytes => { let s=""; bytes.forEach(b=>s+=String.fromCharCode(b)); return btoa(s); };
+const fromB64 = s => Uint8Array.from(atob(String(s).replace(/\s/g,"")), c=>c.charCodeAt(0));
+const userBytes = u => te.encode(String(u).trim().toLowerCase());
+async function deriveKey(pass, salt, iterations){
+  const base = await crypto.subtle.importKey("raw", te.encode(pass), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations, hash:"SHA-256"}, base, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
 }
+async function unlock(cfg, user, pass){
+  const key = await deriveKey(pass, fromB64(cfg.kdf.salt), cfg.kdf.iterations);
+  const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:fromB64(cfg.iv), additionalData:userBytes(user)}, key, fromB64(cfg.data));
+  return JSON.parse(td.decode(plain));
+}
+async function lock(payload, user, pass){
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), iterations = 310000;
+  const key = await deriveKey(pass, salt, iterations);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM", iv, additionalData:userBytes(user)}, key, te.encode(JSON.stringify(payload))));
+  return {v:1, note:"Shared organiser login for admin.html. Encrypted with the admin password. Change it from the admin page, not by hand.", kdf:{name:"PBKDF2", hash:"SHA-256", iterations, salt:toB64(salt)}, iv:toB64(iv), data:toB64(ct), updated:new Date().toISOString()};
+}
+
+/* ---------- GitHub ---------- */
+const utf8ToB64 = s => toB64(te.encode(s));
+const b64ToUtf8 = s => td.decode(fromB64(s));
+const apiURL = path => `https://api.github.com/repos/${OWNER}/${REPO}/contents/${path}`;
+const ghHeaders = token => token ? {Accept:"application/vnd.github+json", Authorization:`Bearer ${token}`} : {Accept:"application/vnd.github+json"};
+async function ghGet(path, token){
+  const r = await fetch(`${apiURL(path)}?ref=${BRANCH}&t=${Date.now()}`, {headers:ghHeaders(token), cache:"no-store"});
+  if(r.status===404) return null;
+  if(!r.ok){ const e = new Error(`GitHub said ${r.status}`); e.status = r.status; throw e; }
+  const j = await r.json();
+  return {text:b64ToUtf8(j.content), sha:j.sha};
+}
+async function ghPut(path, text, sha, token, message){
+  const r = await fetch(apiURL(path), {method:"PUT", headers:{...ghHeaders(token), "Content-Type":"application/json"}, body:JSON.stringify({message, content:utf8ToB64(text), branch:BRANCH, ...(sha?{sha}:{})})});
+  if(!r.ok){ const e = new Error(`GitHub said ${r.status}`); e.status = r.status; throw e; }
+  return (await r.json()).content.sha;
+}
+function ghError(e, shared){
+  if(e.status===401) return shared ? "The saved GitHub key no longer works (it may have expired). The owner can add a new one under Login & settings." : "GitHub did not accept the token. Check you copied all of it and that it has not expired.";
+  if(e.status===403 || e.status===404) return `This GitHub key cannot write to the repository. It needs Contents: Read and write on ${REPO}.`;
+  if(e.status===409 || e.status===422) return "Someone published at the same moment. Press Publish again.";
+  return `Could not reach GitHub (${e.message}). Check your connection and try again.`;
+}
+async function readConfig(token){
+  try{ const g = await ghGet(CONFIG, token); if(g) return {cfg:JSON.parse(g.text), sha:g.sha}; }catch(_){}
+  const r = await fetch(CONFIG+"?v="+Date.now(), {cache:"no-store"});
+  if(!r.ok) throw new Error("The login settings file is missing.");
+  return {cfg:await r.json(), sha:null};
+}
+const tokenNow = () => SESSION?.token || ($("#token")?.value.trim() || store.get("ghtoken") || null);
+
+/* ---------- login ---------- */
 $("#loginForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const h = await sha256($("#pass").value.trim());
-  if(h !== PASS_HASH){ $("#loginErr").textContent = "That passcode is not right. Try again."; return; }
-  sstore.set("admin", "1"); start();
-});
-$("#logout").addEventListener("click", () => { try{ sessionStorage.removeItem("admin"); }catch(_){} location.reload(); });
-
-/* ---------- data ---------- */
-const b64decode = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g,"")), c=>c.charCodeAt(0)));
-const b64encode = s => { const bytes = new TextEncoder().encode(s); let bin=""; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); };
-async function loadData(){
+  const user = $("#user").value.trim(), pass = $("#pass").value, btn = $("#loginBtn");
+  btn.disabled = true; btn.textContent = "Checking…"; $("#loginErr").textContent = "";
   try{
-    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}?ref=${BRANCH}&t=${Date.now()}`, {headers:{Accept:"application/vnd.github+json"}});
-    if(!r.ok) throw new Error(r.status);
-    const j = await r.json(); SHA = j.sha; ORIGINAL = b64decode(j.content);
-  }catch(_){
-    const r = await fetch(FILE+"?v="+Date.now(), {cache:"no-store"}); ORIGINAL = await r.text(); SHA = null;
-  }
-  const draft = store.get("draft");
-  D = JSON.parse(draft && JSON.parse(draft).base === ORIGINAL.length ? JSON.parse(draft).data : ORIGINAL);
-  D.cricketFixtures ||= []; D.volleyballFixtures ||= [];
+    const {cfg} = await readConfig();
+    let payload;
+    try{ payload = await unlock(cfg, user, pass); }catch(_){ throw new Error("Wrong username or password."); }
+    SESSION = {user, token:payload.token || null}; sess.set(SESSION);
+    $("#pass").value = "";
+    start();
+  }catch(err){ $("#loginErr").textContent = err.message; }
+  btn.disabled = false; btn.textContent = "Log in";
+});
+$("#logout").addEventListener("click", () => { sess.set(null); location.reload(); });
+
+/* ---------- data, drafts and merging ---------- */
+function freshLists(d){ d.cricketFixtures ||= []; d.volleyballFixtures ||= []; return d; }
+function merge(base, mine, theirs){
+  const out = {...theirs}, conflicts = [];
+  new Set([...Object.keys(base), ...Object.keys(mine), ...Object.keys(theirs)]).forEach(k => {
+    if(k==="updated") return;
+    const b = base[k], m = mine[k], t = theirs[k];
+    if(ser(m)===ser(b)) { out[k] = t; return; }
+    if(ser(t)===ser(b) || ser(t)===ser(m)) { out[k] = m; return; }
+    if(Fest.LISTS.includes(k) && Array.isArray(b) && Array.isArray(m) && Array.isArray(t) && b.length===m.length && b.length===t.length){
+      out[k] = b.map((row,i) => { if(ser(m[i])===ser(row)) return t[i]; if(ser(t[i])===ser(row) || ser(t[i])===ser(m[i])) return m[i]; conflicts.push(`${sportOf(k)?.name||k} row ${i+1}`); return m[i]; });
+      return;
+    }
+    out[k] = m; conflicts.push(k);
+  });
+  return {out, conflicts};
 }
-const serialize = () => JSON.stringify({...D, updated: undefined}, null, 1);
-const originalSer = () => { const o = JSON.parse(ORIGINAL); o.cricketFixtures ||= []; o.volleyballFixtures ||= []; return JSON.stringify({...o, updated: undefined}, null, 1); };
+async function loadData(){
+  let text = null;
+  try{ const g = await ghGet(DATA, SESSION?.token); if(g){ text = g.text; SHA = g.sha; } }catch(_){}
+  if(text===null){ const r = await fetch(DATA+"?v="+Date.now(), {cache:"no-store"}); text = await r.text(); SHA = null; }
+  ORIGINAL = text;
+  const latest = freshLists(JSON.parse(text));
+  let draft = null; try{ draft = JSON.parse(store.get("draft2")||"null"); }catch(_){}
+  D = draft ? freshLists(merge(freshLists(JSON.parse(draft.base)), freshLists(JSON.parse(draft.data)), latest).out) : latest;
+}
+const isDirty = () => ser({...D, updated:0}) !== ser({...freshLists(JSON.parse(ORIGINAL)), updated:0});
+function rowsChanged(k, o){
+  const a = o[k]||[], b = D[k]||[]; let changed = 0, wins = 0;
+  for(let i=0;i<Math.max(a.length,b.length);i++){ if(ser(a[i])!==ser(b[i])){ changed++; if((a[i]?.winner||"")!==(b[i]?.winner||"")) wins++; } }
+  return {changed, wins};
+}
+const TEAM_KEYS = {cricket:"Cricket teams", volleyball:"Volleyball teams", carromTeams:"Carrom teams", chessGroups:"Chess groups", chessPlays:"Chess groups", festDates:"Fest dates"};
+function changeCount(){
+  const o = freshLists(JSON.parse(ORIGINAL)); let n = 0;
+  Fest.LISTS.forEach(k=>n += rowsChanged(k,o).changed);
+  Object.keys(TEAM_KEYS).forEach(k=>{ if(ser(o[k])!==ser(D[k])) n++; });
+  return n;
+}
+function changeSummary(){
+  const o = freshLists(JSON.parse(ORIGINAL)), out = [];
+  SPORTS.forEach(s=>{ const {changed,wins} = rowsChanged(s.list,o); if(changed) out.push(`${s.name}: ${changed} ${changed===1?"match":"matches"} changed${wins?`, including ${wins} ${wins===1?"winner":"winners"}`:""}`); });
+  Object.keys(TEAM_KEYS).forEach(k=>{ if(ser(o[k])!==ser(D[k])) out.push(`${TEAM_KEYS[k]} edited`); });
+  return [...new Set(out)];
+}
 function markDirty(){
-  const dirty = serialize() !== originalSer();
+  const dirty = isDirty(), n = dirty ? changeCount() : 0;
   $("#dirty").hidden = !dirty; $("#dirty").textContent = "Unpublished changes";
-  store.set("draft", dirty ? JSON.stringify({base: ORIGINAL.length, data: JSON.stringify(D)}) : null);
+  $("#pubbar").hidden = !dirty || tab==="publish";
+  $("#pubbarText").textContent = dirty ? `${n} unpublished ${n===1?"change":"changes"}` : "";
+  store.set("draft2", dirty ? JSON.stringify({base:ORIGINAL, data:JSON.stringify(D)}) : null);
   return dirty;
 }
 
+/* ---------- publishing ---------- */
+async function publish(statusEl, btn){
+  const token = tokenNow(), shared = !!SESSION?.token;
+  const say = (cls, msg) => { statusEl.className = "status "+cls; statusEl.textContent = msg; };
+  if(!token){
+    tab = "publish"; render();
+    const s = $("#pubStatus"); s.className = "status bad"; s.textContent = "Paste a GitHub token below to publish. The steps are underneath.";
+    return;
+  }
+  if(!shared && $("#remember")?.checked) store.set("ghtoken", token);
+  if(btn) btn.disabled = true;
+  say("", "Publishing…");
+  try{
+    const cur = await ghGet(DATA, token);
+    let toSave = D, conflicts = [];
+    if(cur && cur.sha !== SHA){
+      const m = merge(freshLists(JSON.parse(ORIGINAL)), D, freshLists(JSON.parse(cur.text)));
+      toSave = m.out; conflicts = m.conflicts;
+    }
+    const body = JSON.stringify({...toSave, updated:new Date().toISOString()}, rep, 1) + "\n";
+    SHA = await ghPut(DATA, body, cur?.sha, token, "Update fixtures and results from admin page");
+    ORIGINAL = body; D = freshLists(JSON.parse(body)); store.set("draft2", null);
+    render();
+    const msg = conflicts.length ? `Published. Another organiser also changed ${conflicts.join(", ")}; your version was kept there.` : "Published. The site shows it within about 2 minutes.";
+    if(tab==="publish"){ const s = $("#pubStatus"); s.className = "status ok"; s.textContent = msg; }
+    else { $("#pubbar").hidden = false; $("#pubbarText").textContent = ""; $("#publishNow").hidden = true; const s = $("#pubbarStatus"); s.className = "status ok"; s.textContent = msg;
+      setTimeout(()=>{ $("#publishNow").hidden = false; s.textContent = ""; markDirty(); }, 5000); }
+  }catch(e){ say("bad", ghError(e, shared)); }
+  if(btn) btn.disabled = false;
+}
+
 /* ---------- views ---------- */
+function viewWinners(){
+  const L = Fest.resolve(D).lists;
+  const real = list => L[list].filter(r => String(r.b||"").trim());
+  const started = r => r.date < todayISO || (r.date===todayISO && toMin(r.start||r.time||r.slot) <= nowMin());
+  const needs = r => r.date && started(r) && !Fest.hasWinner(r) && !Fest.isTBD(r.A) && !Fest.isTBD(r.B);
+  if(!winSport){
+    winSport = (SPORTS.find(s=>real(s.list).some(r=>r.date===todayISO)) || SPORTS.find(s=>real(s.list).some(needs)) || SPORTS[0]).list;
+  }
+  const rows = real(winSport), pending = rows.filter(needs);
+  const dates = [...new Set(rows.map(r=>r.date).filter(Boolean))].sort();
+  if(!winView || (winView!=="pending" && winView!=="all" && !dates.includes(winView))){
+    winView = dates.includes(todayISO) ? todayISO : pending.length ? "pending" : (dates.find(d=>d>todayISO) || "all");
+  }
+  const shown = winView==="pending" ? pending : winView==="all" ? rows : rows.filter(r=>r.date===winView);
+  const sel = SPORTS.map(s=>{ const n = real(s.list).filter(needs).length; return `<option value="${s.list}" ${s.list===winSport?"selected":""}>${s.name}${n?` (${n} waiting)`:""}</option>`; }).join("");
+  const chips = [`<button class="chip" data-wv="pending" aria-pressed="${winView==="pending"}">Needs result<small>${pending.length}</small></button>`,
+    ...dates.map(d=>`<button class="chip" data-wv="${d}" aria-pressed="${winView===d}">${d===todayISO?"Today":fmtDay(d)}</button>`),
+    `<button class="chip" data-wv="all" aria-pressed="${winView==="all"}">All</button>`].join("");
+  const empty = !rows.length ? "No fixtures for this sport yet. Add them under Fixtures." : winView==="pending" ? "Nothing waiting. Every match played so far has a winner." : "No matches here.";
+  return `<div class="panel">
+    <div class="row"><h2>Update winners</h2><span class="grow"></span><label class="muted" for="winSport">Sport</label><select id="winSport" class="btn">${sel}</select></div>
+    <p class="muted" style="margin:0">Tap the winner of each match. Tap it again to undo. Later rounds fill in by themselves, so “Winner of M01” turns into the team name. Nothing goes live until you press <b>Publish now</b>.</p>
+    <div class="chips">${chips}</div>
+    ${shown.length ? `<div class="wlist">${shown.map(r=>winCard(winSport,r)).join("")}</div>` : `<p class="note" style="margin:0">${empty}</p>`}
+  </div>`;
+}
+function winCard(list, r){
+  const S = sportOf(list);
+  const id = list==="chess" ? (r.no?`#${r.no}`:"") : (r.id||"");
+  const time = r.start || r.time || r.slot || "";
+  const stage = list==="tt" ? `${r.event}${r.stage&&r.stage!=="League"?" "+r.stage:""}` : list==="chess" ? (r.group?`Group ${r.group} · ${r.round}`:r.round) : list==="carrom" ? r.round : r.stage;
+  const meta = [id, fmtDay(r.date), time, stage].filter(Boolean).map(esc).join(" · ");
+  const waiting = [r.A, r.B].filter(Fest.isTBD);
+  const blocked = waiting.length > 0, done = Fest.hasWinner(r) && !blocked;
+  const btn = side => { const on = r.winner===side; return `<button class="pick${on?" on":""}" type="button" data-win="${side}" data-i="${r.idx}" aria-pressed="${on}" ${blocked?"disabled":""}><span>${esc(side==="a"?r.A:r.B)}</span>${on?"<small>Winner</small>":""}</button>`; };
+  const draw = S.draw ? `<button class="pick draw${r.winner==="draw"?" on":""}" type="button" data-win="draw" data-i="${r.idx}" aria-pressed="${r.winner==="draw"}" ${blocked?"disabled":""}>${S.draw}</button>` : "";
+  const hint = !blocked ? "" : waiting.some(w=>/round\s*robin/i.test(w))
+    ? `<p class="hint">Fills in when every round robin match has a winner. If teams are level on points, type the two names under Fixtures.</p>`
+    : `<p class="hint">Waiting for ${esc(waiting.join(" and "))}. Set that result first.</p>`;
+  return `<div class="wcard${done?" done":""}"><div class="wmeta">${meta}${done?'<span class="saved">✓ Winner set</span>':""}</div>
+    <div class="picks">${btn("a")}<span class="vs">vs</span>${btn("b")}</div>${draw}
+    <input class="score" data-score="${r.idx}" value="${esc(r.result||"")}" placeholder="Score or note (optional)" aria-label="Score or note for match ${esc(id)}">${hint}</div>`;
+}
 function viewQR(){
   const cards = PAGES.map(p => `<div class="qr"><img src="qr/qr-${p.id}.png" alt="QR code for ${esc(p.name)}"><h3>${esc(p.name)}</h3><code>${esc(SITE+p.hash)}</code>
     <div class="row" style="justify-content:center"><button class="btn small" data-copy="${esc(SITE+p.hash)}">Copy link</button><a class="btn small" href="qr/qr-${p.id}.png" download="csg-sports-fest-qr-${p.id}.png">Download</a><button class="btn small" data-poster="${p.id}">Print poster</button></div></div>`).join("");
   return `<div class="panel">
-    <div class="row"><h2 style="font-size:1.8rem">QR codes &amp; links</h2><span class="sp" style="flex:1"></span><button class="btn primary" data-print="sheet">Print all QR codes (A4)</button><a class="btn" href="qr/qr-sheet.png" download="csg-sports-fest-qr-sheet.png">Download sheet</a></div>
-    <p class="muted" style="margin:0">Each QR code opens that sport's page. "Print poster" prints one large QR code for the venue wall. These links never change, so printed codes keep working after you update fixtures.</p>
+    <div class="row"><h2>QR codes &amp; links</h2><span class="grow"></span><button class="btn primary" data-print="sheet">Print all QR codes (A4)</button><a class="btn" href="qr/qr-sheet.png" download="csg-sports-fest-qr-sheet.png">Download sheet</a></div>
+    <p class="muted" style="margin:0">Each QR code opens that sport's page. “Print poster” prints one large QR code for the venue wall. The links never change, so printed codes keep working after you update fixtures or winners.</p>
     <div class="qrs">${cards}</div></div>`;
 }
-function cell(r,i,[k,label,type]){
+function cell(r,i,[k,label,type],list){
   const v = r[k] ?? "";
-  if(Array.isArray(type)) return `<td><select data-i="${i}" data-k="${k}" aria-label="${label}">${type.map(o=>`<option ${o===v?"selected":""}>${o}</option>`).join("")}</select></td>`;
+  if(type==="win") return `<td class="w-w"><select data-i="${i}" data-k="${k}" aria-label="${label}">${WIN(list).map(([val,lab])=>`<option value="${val}" ${val===v?"selected":""}>${lab}</option>`).join("")}</select></td>`;
+  if(Array.isArray(type)) return `<td><select data-i="${i}" data-k="${k}" aria-label="${label}">${(type.includes(v)||!v?type:[v,...type]).map(o=>`<option ${o===v?"selected":""}>${esc(o)}</option>`).join("")}</select></td>`;
   const cls = type==="l"?"w-l":type==="s"?"w-s":type==="date"?"w-d":"";
   return `<td class="${cls}"><input data-i="${i}" data-k="${k}" type="${type==="date"?"date":"text"}" value="${esc(v)}" aria-label="${label}"></td>`;
 }
 function viewFixtures(){
-  const S = FIX[fixSport], rows = D[fixSport];
-  const orig = JSON.parse(ORIGINAL)[fixSport] || [];
+  const S = FIX[fixSport], rows = D[fixSport], orig = freshLists(JSON.parse(ORIGINAL))[fixSport] || [];
   const f = filterText.toLowerCase();
   const body = rows.map((r,i)=>({r,i})).filter(({r})=>!f || Object.values(r).join(" ").toLowerCase().includes(f)).map(({r,i}) =>
-    `<tr class="${JSON.stringify(r)!==JSON.stringify(orig[i])?"changed":""}">${S.cols.map(c=>cell(r,i,c)).join("")}<td><button class="btn small danger" data-del="${i}" aria-label="Delete row">✕</button></td></tr>`).join("");
-  const sel = Object.entries(FIX).map(([k,v])=>`<option value="${k}" ${k===fixSport?"selected":""}>${v.name}</option>`).join("");
+    `<tr class="${ser(r)!==ser(orig[i])?"changed":""}">${S.cols.map(c=>cell(r,i,c,fixSport)).join("")}<td><button class="btn small danger" data-del="${i}" aria-label="Delete this match">✕</button></td></tr>`).join("");
+  const sel = SPORTS.map(s=>`<option value="${s.list}" ${s.list===fixSport?"selected":""}>${s.name}</option>`).join("");
   return `<div class="panel">
-    <div class="row"><h2 style="font-size:1.8rem">Fixtures &amp; results</h2></div>
-    <div class="row"><select id="fixSport" class="btn">${sel}</select><input id="filter" class="btn" style="font-weight:400;min-width:200px" placeholder="Filter rows, e.g. a name or date" value="${esc(filterText)}"><span class="muted">${rows.length} ${rows.length===1?"match":"matches"}</span><span style="flex:1"></span><button class="btn primary" id="addRow">+ Add match</button></div>
-    <p class="note" style="margin:0">Edit any cell and it is kept in this browser straight away. Type a <b>Result</b> (for example "Navii won 11-7" or "Winner: Kaveri") to show it on the site. For knock-out rounds, replace "Winner of M01" with the team name once known. When you are done, go to <b>Publish changes</b>.</p>
+    <div class="row"><h2>Fixtures</h2></div>
+    <div class="field" style="max-width:360px"><label for="festDatesInput">Fest dates shown at the top of the site</label><input id="festDatesInput" value="${esc(D.festDates||"")}" placeholder="23 Nov – 12 Dec 2026"></div>
+    <div class="row"><select id="fixSport" class="btn" aria-label="Sport">${sel}</select><input id="filter" class="btn" style="font-weight:400;min-width:200px" placeholder="Filter rows, e.g. a name or date" value="${esc(filterText)}" aria-label="Filter rows"><span class="muted">${rows.length} ${rows.length===1?"match":"matches"}</span><span class="grow"></span><button class="btn primary" id="addRow">+ Add match</button></div>
+    <p class="note" style="margin:0">Change dates, times and names here, or add new matches such as knock-outs and the cricket and volleyball fixtures. To point a match at an earlier result, type <b>Winner of M01</b> (use that match's number) and it fills in by itself. Winners are easier to set in <b>Update winners</b>.</p>
     <div class="tbl"><table><thead><tr>${S.cols.map(c=>`<th>${c[1]}</th>`).join("")}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${S.cols.length+1}" class="muted" style="padding:16px">No matches yet. Use “Add match” to create the first one.</td></tr>`}</tbody></table></div>
   </div>`;
 }
@@ -235,57 +449,127 @@ function viewTeams(){
   const opts = [["cricket","Cricket"],["volleyball","Volleyball"],["carrom","Carrom"],["chess","Chess groups"]].map(([k,n])=>`<option value="${k}" ${k===teamSport?"selected":""}>${n}</option>`).join("");
   let inner = "";
   if(teamSport==="cricket" || teamSport==="volleyball"){
-    const list = D[teamSport];
-    inner = `<div class="teams">${list.map((t,i)=>`<div class="team"><label for="tn${i}">Team name</label><input id="tn${i}" data-team="${i}" value="${esc(t.name)}"><label for="tp${i}">Players, one per line${teamSport==="volleyball"?" (add “, Position” if known)":""}</label><textarea id="tp${i}" data-players="${i}">${esc(t.players.map(p=>Array.isArray(p)?(p[1]?p[0]+", "+p[1]:p[0]):p).join("\n"))}</textarea><button class="btn small danger" data-delteam="${i}">Remove team</button></div>`).join("")}</div>
+    inner = `<div class="teams">${D[teamSport].map((t,i)=>`<div class="team"><label for="tn${i}">Team name</label><input id="tn${i}" data-team="${i}" value="${esc(t.name)}"><label for="tp${i}">Players, one per line${teamSport==="volleyball"?" (add “, Position” if known)":""}</label><textarea id="tp${i}" data-players="${i}">${esc(t.players.map(p=>Array.isArray(p)?(p[1]?p[0]+", "+p[1]:p[0]):p).join("\n"))}</textarea><button class="btn small danger" data-delteam="${i}">Remove team</button></div>`).join("")}</div>
       <div><button class="btn" id="addTeam">+ Add team</button></div>`;
   } else if(teamSport==="carrom"){
-    inner = `<div class="tbl"><table><thead><tr><th>Team no.</th><th>Team name</th><th>Round 1 match</th><th></th></tr></thead><tbody>${D.carromTeams.map((t,i)=>`<tr><td class="w-s"><input data-ct="${i}" data-k="no" value="${esc(t.no)}"></td><td class="w-l"><input data-ct="${i}" data-k="name" value="${esc(t.name)}"></td><td class="w-s"><input data-ct="${i}" data-k="r1" value="${esc(t.r1)}"></td><td><button class="btn small danger" data-delct="${i}">✕</button></td></tr>`).join("")}</tbody></table></div><div><button class="btn" id="addCT">+ Add team</button></div>
-      <p class="note" style="margin:0">Renaming a team here does not rename it in the fixtures. Change it in <b>Fixtures &amp; results</b> too.</p>`;
+    inner = `<div class="tbl"><table><thead><tr><th>Team no.</th><th>Team name</th><th>Round 1 match</th><th></th></tr></thead><tbody>${D.carromTeams.map((t,i)=>`<tr><td class="w-s"><input data-ct="${i}" data-k="no" value="${esc(t.no)}" aria-label="Team number"></td><td class="w-l"><input data-ct="${i}" data-k="name" value="${esc(t.name)}" aria-label="Team name"></td><td class="w-s"><input data-ct="${i}" data-k="r1" value="${esc(t.r1)}" aria-label="Round 1 match"></td><td><button class="btn small danger" data-delct="${i}" aria-label="Remove team">✕</button></td></tr>`).join("")}</tbody></table></div><div><button class="btn" id="addCT">+ Add team</button></div>
+      <p class="note" style="margin:0">Renaming a team here does not rename it in the fixtures. Change it under <b>Fixtures</b> too.</p>`;
   } else {
-    inner = `<div class="teams">${Object.entries(D.chessGroups).map(([g,ps])=>`<div class="team"><label>Group ${g} · plays</label><input data-plays="${g}" value="${esc(D.chessPlays[g]||"")}"><label for="cg${g}">Players, one per line</label><textarea id="cg${g}" data-group="${g}">${esc(ps.join("\n"))}</textarea></div>`).join("")}</div>`;
+    inner = `<div class="teams">${Object.entries(D.chessGroups).map(([g,ps])=>`<div class="team"><label for="pl${g}">Group ${g} · plays</label><input id="pl${g}" data-plays="${g}" value="${esc(D.chessPlays[g]||"")}"><label for="cg${g}">Players, one per line</label><textarea id="cg${g}" data-group="${g}">${esc(ps.join("\n"))}</textarea></div>`).join("")}</div>`;
   }
-  return `<div class="panel"><div class="row"><h2 style="font-size:1.8rem">Teams</h2><span style="flex:1"></span><select id="teamSport" class="btn">${opts}</select></div>${inner}</div>`;
+  return `<div class="panel"><div class="row"><h2>Teams</h2><span class="grow"></span><select id="teamSport" class="btn" aria-label="Sport">${opts}</select></div>${inner}</div>`;
+}
+function tokenSteps(){
+  return `<ol class="steps"><li>Sign in to GitHub as the repository owner.</li>
+    <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">New fine-grained token</a>. Give it a name and an expiry date after the fest ends.</li>
+    <li>Repository access: <b>Only select repositories</b> → <b>${REPO}</b>.</li>
+    <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
+    <li>Generate the token and copy it. Don't post it in chats or groups.</li></ol>`;
 }
 function viewPublish(){
-  const dirty = markDirty();
-  const remembered = store.get("ghtoken");
+  const dirty = isDirty(), list = dirty ? changeSummary() : [], shared = !!SESSION?.token, remembered = store.get("ghtoken");
   return `<div class="panel" style="max-width:720px">
-    <h2 style="font-size:1.8rem">Publish changes</h2>
-    <p class="status ${dirty?"warn":"ok"}" style="margin:0">${dirty?"You have changes that are not on the site yet.":"No unpublished changes. The site matches what is saved."}</p>
-    <div class="field"><label for="token"><b>GitHub access token</b></label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(remembered||"")}">
-      <label class="muted" style="font-size:.9rem"><input type="checkbox" id="remember" ${remembered?"checked":""}> Remember on this device</label></div>
-    <div class="row"><button class="btn primary" id="publish" ${dirty?"":"disabled"}>Publish to the site</button><button class="btn" id="download">Download backup (data.json)</button><button class="btn danger" id="discard" ${dirty?"":"disabled"}>Discard my changes</button></div>
+    <h2>Publish</h2>
+    <p class="status ${dirty?"warn":"ok"}">${dirty?"These changes are not on the site yet:":"No unpublished changes. The site matches what is saved."}</p>
+    ${list.length?`<ul class="list">${list.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+    ${shared ? `<p class="muted" style="margin:0">Publishing uses the shared organiser login, so no token is needed.</p>` : `
+    <div class="field"><label for="token">GitHub token</label><input id="token" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(remembered||"")}">
+      <label class="muted" style="font-size:.9rem;font-weight:400"><input type="checkbox" id="remember" ${remembered?"checked":""}> Remember on this device</label></div>`}
+    <div class="row"><button class="btn primary" id="publish" ${dirty?"":"disabled"}>Publish to the site</button><button class="btn" id="download">Download backup</button><button class="btn danger" id="discard" ${dirty?"":"disabled"}>Discard my changes</button></div>
     <p class="status" id="pubStatus" aria-live="polite"></p>
-    <div class="note"><b>Getting a token (one time, about 2 minutes)</b>
-      <ol class="steps"><li>Sign in to GitHub as the repository owner, or as a collaborator added to the repository.</li>
-      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">New fine-grained token</a>.</li>
-      <li>Repository access: <b>Only select repositories</b> → <b>${REPO}</b>.</li>
-      <li>Permissions → Repository permissions → <b>Contents: Read and write</b>.</li>
-      <li>Generate, copy the token, and paste it above. Don't share it in chats or groups.</li></ol>
-      <p style="margin:.6em 0 0">After publishing, the site updates in about 1 to 2 minutes. No token? Download the backup file and upload it as <b>data.json</b> on the <a href="https://github.com/${OWNER}/${REPO}" target="_blank" rel="noopener">repository page</a> (Add file → Upload files).</p></div>
+    ${shared?"":`<div class="note"><b>Publishing isn't set up for the shared login yet.</b> The owner can do it once under <b>Login &amp; settings</b>, and after that nobody needs a token. Until then, paste a token here:${tokenSteps()}</div>`}
   </div>`;
 }
+function viewSettings(){
+  const shared = !!SESSION?.token;
+  return `<div class="panel">
+    <h2>Login &amp; settings</h2>
+    <section class="card"><h3>Publishing for all organisers</h3>
+      <p class="status ${shared?"ok":"warn"}">${shared?"Set up. Anyone who logs in with the organiser username and password can publish.":"Not set up yet. Organisers can log in and make changes, but publishing needs a GitHub token."}</p>
+      <p class="muted" style="margin:0">${shared?"To replace the saved key (for example when it expires), paste a new token below.":"Do this once. The token is saved encrypted with the organiser password, so only people who know the password can use it."}</p>
+      <div class="field"><label for="setToken">GitHub token</label><input id="setToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>
+      <div class="field"><label for="setPass1">Your current password</label><input id="setPass1" type="password" autocomplete="current-password"></div>
+      <div class="row"><button class="btn primary" id="saveToken">Save for all organisers</button></div>
+      <p class="status" id="tokStatus" aria-live="polite"></p>
+      <details><summary class="muted">How to create the token</summary>${tokenSteps()}</details>
+    </section>
+    <section class="card"><h3>Change username or password</h3>
+      <p class="muted" style="margin:0">This changes the login for everyone. Share the new details with your organisers.</p>
+      <div class="field"><label for="curPass">Current password</label><input id="curPass" type="password" autocomplete="current-password"></div>
+      <div class="field"><label for="newUser">New username</label><input id="newUser" autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(SESSION?.user||"")}"></div>
+      <div class="field"><label for="newPass">New password (at least 10 characters)</label><input id="newPass" type="password" autocomplete="new-password"></div>
+      <div class="field"><label for="newPass2">New password again</label><input id="newPass2" type="password" autocomplete="new-password"></div>
+      ${shared?"":`<div class="field"><label for="chgToken">GitHub token (needed to save this change)</label><input id="chgToken" type="password" autocomplete="off" placeholder="github_pat_…"></div>`}
+      <div class="row"><button class="btn primary" id="changeLogin">Save new login</button></div>
+      <p class="status" id="chgStatus" aria-live="polite"></p>
+    </section>
+  </div>`;
+}
+
 function render(){
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===tab));
   const focusId = document.activeElement && document.activeElement.id;
-  $("#main").innerHTML = ({qr:viewQR, fixtures:viewFixtures, teams:viewTeams, publish:viewPublish})[tab]();
+  $("#main").innerHTML = ({winners:viewWinners, fixtures:viewFixtures, teams:viewTeams, qr:viewQR, publish:viewPublish, settings:viewSettings})[tab]();
+  $("#who").textContent = SESSION ? `Signed in as ${SESSION.user}` : "";
   markDirty();
   if(focusId==="filter"){ const f=$("#filter"); f.focus(); f.setSelectionRange(f.value.length,f.value.length); }
+}
+
+/* ---------- settings actions ---------- */
+async function saveSharedToken(){
+  const tok = $("#setToken").value.trim(), pass = $("#setPass1").value, st = $("#tokStatus");
+  const say = (c,m) => { st.className = "status "+c; st.textContent = m; };
+  if(!tok || !pass){ say("bad","Paste the token and type your current password."); return; }
+  say("","Saving…");
+  try{
+    const g = await ghGet(CONFIG, tok);
+    const cfg = g ? JSON.parse(g.text) : (await readConfig()).cfg;
+    let payload; try{ payload = await unlock(cfg, SESSION.user, pass); }catch(_){ say("bad","That password is not right."); return; }
+    const next = await lock({...payload, v:1, token:tok}, SESSION.user, pass);
+    await ghPut(CONFIG, JSON.stringify(next,null,1)+"\n", g?.sha, tok, "Save publishing key for organiser login");
+    SESSION.token = tok; sess.set(SESSION);
+    render(); const s2 = $("#tokStatus"); s2.className = "status ok"; s2.textContent = "Saved. Organisers can now publish with just the username and password.";
+  }catch(e){ say("bad", ghError(e,false)); }
+}
+async function changeLogin(){
+  const cur = $("#curPass").value, nu = $("#newUser").value.trim(), np = $("#newPass").value, np2 = $("#newPass2").value, st = $("#chgStatus");
+  const say = (c,m) => { st.className = "status "+c; st.textContent = m; };
+  if(!/^[\w.@-]{3,40}$/.test(nu)) return say("bad","Use 3 to 40 letters, numbers, dots, dashes or underscores for the username.");
+  if(np.length < 10) return say("bad","Use at least 10 characters for the new password.");
+  if(np !== np2) return say("bad","The two new passwords are different.");
+  const tok = SESSION?.token || $("#chgToken")?.value.trim();
+  if(!tok) return say("bad","Paste a GitHub token to save this change.");
+  say("","Saving…");
+  try{
+    const g = await ghGet(CONFIG, tok);
+    const cfg = g ? JSON.parse(g.text) : (await readConfig()).cfg;
+    let payload; try{ payload = await unlock(cfg, SESSION.user, cur); }catch(_){ return say("bad","The current password is not right."); }
+    const next = await lock(payload, nu, np);
+    await ghPut(CONFIG, JSON.stringify(next,null,1)+"\n", g?.sha, tok, "Change organiser login");
+    SESSION.user = nu; sess.set(SESSION);
+    render(); const s2 = $("#chgStatus"); s2.className = "status ok"; s2.textContent = `Saved. The login is now “${nu}” with your new password.`;
+  }catch(e){ say("bad", ghError(e, !!SESSION?.token)); }
 }
 
 /* ---------- events ---------- */
 document.addEventListener("click", async e => {
   const t = e.target.closest("button, a"); if(!t) return;
-  if(t.dataset.tab){ tab = t.dataset.tab; render(); return; }
+  if(t.dataset.tab){ tab = t.dataset.tab; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.win){
+    const row = D[winSport][+t.dataset.i], side = t.dataset.win;
+    if(row.winner===side) delete row.winner; else row.winner = side;
+    render(); return;
+  }
+  if(t.dataset.wv){ winView = t.dataset.wv; render(); return; }
   if(t.dataset.copy){ try{ await navigator.clipboard.writeText(t.dataset.copy); t.textContent="Copied"; }catch(_){ t.textContent="Copy failed"; } setTimeout(()=>t.textContent="Copy link",1500); return; }
   if(t.dataset.print==="sheet"){ printSheet(); return; }
   if(t.dataset.poster){ printPoster(t.dataset.poster); return; }
   if(t.dataset.del){ D[fixSport].splice(+t.dataset.del,1); render(); return; }
   if(t.id==="addRow"){
     const S = FIX[fixSport], last = D[fixSport][D[fixSport].length-1] || {};
-    const r = {}; S.cols.forEach(([k,,type])=>r[k] = k==="date"?(last.date||new Date().toISOString().slice(0,10)) : Array.isArray(type)?(last[k]||type[0]) : "");
-    if(fixSport==="tt") r.stage="League";
-    D[fixSport].push(r); filterText=""; render();
+    const r = {};
+    S.cols.forEach(([k,,type])=>{ if(k==="winner"||k==="result") return; r[k] = k==="date" ? (last.date||todayISO) : Array.isArray(type) ? (last[k]||type[0]) : ""; });
+    D[fixSport].push(r); filterText = ""; render();
     const inputs = document.querySelectorAll("tbody tr:last-child input"); inputs[0]?.focus(); inputs[0]?.scrollIntoView({block:"center"});
     return;
   }
@@ -293,17 +577,22 @@ document.addEventListener("click", async e => {
   if(t.id==="addTeam"){ D[teamSport].push({name:"New team", players:[]}); render(); return; }
   if(t.dataset.delct){ D.carromTeams.splice(+t.dataset.delct,1); render(); return; }
   if(t.id==="addCT"){ D.carromTeams.push({no:D.carromTeams.length+1, name:"", r1:""}); render(); return; }
-  if(t.id==="download"){ const blob = new Blob([JSON.stringify({...D, updated:new Date().toISOString()},null,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="data.json"; a.click(); return; }
+  if(t.id==="download"){ const blob = new Blob([JSON.stringify({...D, updated:new Date().toISOString()},rep,1)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="data.json"; a.click(); return; }
   if(t.id==="discard"){
     if(t.dataset.sure!=="1"){ t.dataset.sure="1"; t.textContent="Click again to discard"; return; }
-    store.set("draft",null); D = JSON.parse(ORIGINAL); D.cricketFixtures ||= []; D.volleyballFixtures ||= []; render(); return;
+    store.set("draft2",null); D = freshLists(JSON.parse(ORIGINAL)); render(); return;
   }
-  if(t.id==="publish") publish(t);
+  if(t.id==="publish"){ publish($("#pubStatus"), t); return; }
+  if(t.id==="publishNow"){ publish($("#pubbarStatus"), t); return; }
+  if(t.id==="saveToken"){ t.disabled = true; await saveSharedToken(); t.disabled = false; return; }
+  if(t.id==="changeLogin"){ t.disabled = true; await changeLogin(); t.disabled = false; return; }
 });
 document.addEventListener("input", e => {
   const el = e.target, ds = el.dataset;
   if(el.id==="filter"){ filterText = el.value; render(); return; }
-  if(ds.i!==undefined){ D[fixSport][+ds.i][ds.k] = el.value; el.closest("tr").classList.add("changed"); markDirty(); return; }
+  if(el.id==="festDatesInput"){ D.festDates = el.value; markDirty(); return; }
+  if(ds.score!==undefined){ const row = D[winSport][+ds.score]; if(el.value.trim()) row.result = el.value; else delete row.result; markDirty(); return; }
+  if(ds.i!==undefined && ds.k){ const row = D[fixSport][+ds.i]; if((ds.k==="winner"||ds.k==="result") && !el.value) delete row[ds.k]; else row[ds.k] = el.value; el.closest("tr").classList.add("changed"); markDirty(); return; }
   if(ds.team!==undefined){ D[teamSport][+ds.team].name = el.value; markDirty(); return; }
   if(ds.players!==undefined){
     const lines = el.value.split("\n").map(s=>s.trim()).filter(Boolean);
@@ -317,44 +606,18 @@ document.addEventListener("input", e => {
 document.addEventListener("change", e => {
   if(e.target.id==="fixSport"){ fixSport = e.target.value; filterText=""; render(); }
   if(e.target.id==="teamSport"){ teamSport = e.target.value; render(); }
+  if(e.target.id==="winSport"){ winSport = e.target.value; winView = null; render(); }
   if(e.target.id==="remember" && !e.target.checked) store.set("ghtoken", null);
 });
 
-async function publish(btn){
-  const token = $("#token").value.trim(), st = $("#pubStatus");
-  if(!token){ st.className="status bad"; st.textContent="Paste your GitHub token first. The steps are below."; return; }
-  if($("#remember").checked) store.set("ghtoken", token);
-  btn.disabled = true; st.className="status"; st.textContent="Publishing…";
-  const api = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
-  const H = {Authorization:`Bearer ${token}`, Accept:"application/vnd.github+json"};
-  try{
-    const cur = await fetch(`${api}?ref=${BRANCH}&t=${Date.now()}`, {headers:H});
-    if(cur.status===401) throw new Error("GitHub did not accept the token. Check you copied all of it and that it has not expired.");
-    if(!cur.ok) throw new Error(`Could not read the current data (GitHub said ${cur.status}).`);
-    const cj = await cur.json();
-    if(SHA && cj.sha !== SHA && btn.dataset.force!=="1"){
-      btn.dataset.force="1"; btn.disabled=false; btn.textContent="Publish anyway";
-      throw new Error("Someone else published changes after you opened this page. Publishing now will replace their changes. Click “Publish anyway” to continue, or Discard and reload to start from their version.");
-    }
-    const body = JSON.stringify({...D, updated:new Date().toISOString()}, null, 1);
-    const put = await fetch(api, {method:"PUT", headers:{...H,"Content-Type":"application/json"}, body:JSON.stringify({message:"Update fixtures from admin page", content:b64encode(body), sha:cj.sha, branch:BRANCH})});
-    if(put.status===403 || put.status===404) throw new Error("This token cannot write to the repository. Give it Contents: Read and write on "+REPO+".");
-    if(!put.ok) throw new Error(`GitHub refused the update (${put.status}). Try again in a minute.`);
-    const pj = await put.json();
-    SHA = pj.content.sha; ORIGINAL = body; store.set("draft", null);
-    render(); const s2 = $("#pubStatus"); s2.className="status ok"; s2.textContent="Published. The site will show the changes in about 1 to 2 minutes.";
-  }catch(err){
-    st.className="status bad"; st.textContent = err.message; btn.disabled=false;
-  }
-}
-
+/* ---------- printing ---------- */
 function printSheet(){
-  $("#print").innerHTML = `<div class="sheet"><h1>CSG Sports Fest 2026</h1><p class="sub">Scan to see fixtures, teams and venues</p>${PAGES.map(p=>`<figure><img src="qr/qr-${p.id}.png" alt=""><figcaption>${esc(p.name)}<small>${esc(SITE+p.hash)}</small></figcaption></figure>`).join("")}</div>`;
+  $("#print").innerHTML = `<div class="sheet"><h1>CSG Sports Fest 2026</h1><p class="sub">Scan to see fixtures, results, teams and venues</p>${PAGES.map(p=>`<figure><img src="qr/qr-${p.id}.png" alt=""><figcaption>${esc(p.name)}<small>${esc(SITE+p.hash)}</small></figcaption></figure>`).join("")}</div>`;
   whenImages(()=>window.print());
 }
 function printPoster(id){
   const p = PAGES.find(x=>x.id===id);
-  $("#print").innerHTML = `<div class="poster"><h1>CSG Sports Fest 2026</h1><h2>${esc(p.name)}</h2><img src="qr/qr-${p.id}.png" alt=""><p>Scan for fixtures, timings and teams</p><p style="font-size:10pt;margin-top:4mm">${esc(SITE+p.hash)}</p></div>`;
+  $("#print").innerHTML = `<div class="poster"><h1>CSG Sports Fest 2026</h1><h2>${esc(p.name)}</h2><img src="qr/qr-${p.id}.png" alt=""><p>Scan for fixtures, results and teams</p><p style="font-size:10pt;margin-top:4mm">${esc(SITE+p.hash)}</p></div>`;
   whenImages(()=>window.print());
 }
 function whenImages(cb){
@@ -368,7 +631,8 @@ async function start(){
   try{ await loadData(); }catch(_){ $("#main").innerHTML = `<p class="status bad">Could not load the fest data. Check your connection and reload.</p>`; return; }
   render();
 }
-if(sstore.get("admin")==="1") start();
+SESSION = sess.get();
+if(SESSION && SESSION.user) start();
 </script>
 </body>
 </html>

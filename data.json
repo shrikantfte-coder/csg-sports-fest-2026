@@ -8,7 +8,8 @@
    "id": "MS01",
    "a": "Sourabh Madiwal",
    "b": "Navii",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -18,7 +19,8 @@
    "id": "MS02",
    "a": "Manikanta",
    "b": "Prashanth y",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -28,7 +30,8 @@
    "id": "MS03",
    "a": "Shrikant Hogtapur",
    "b": "Bhuvan shetty",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -38,7 +41,8 @@
    "id": "MS04",
    "a": "Pavan Shubhakar",
    "b": "Karthik",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -48,7 +52,8 @@
    "id": "MS05",
    "a": "Rakshith Gowda D P",
    "b": "Shrikant Bhajantri",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -58,7 +63,8 @@
    "id": "MS06",
    "a": "Yash",
    "b": "Ashok",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -68,7 +74,8 @@
    "id": "MS07",
    "a": "Vijaykumar",
    "b": "Arsalan",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -78,7 +85,8 @@
    "id": "MS08",
    "a": "Diwakar B L",
    "b": "Venkat E",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -88,7 +96,8 @@
    "id": "MS09",
    "a": "Arvind",
    "b": "Manjesh Kumar K",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -98,7 +107,8 @@
    "id": "MS10",
    "a": "Naveen Kumar R",
    "b": "K Sanjay Kumar",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -108,7 +118,8 @@
    "id": "MS11",
    "a": "Nithin",
    "b": "Vinay A N",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-11-23",
@@ -118,7 +129,8 @@
    "id": "MS12",
    "a": "Manjunath H",
    "b": "Munish Sharma",
-   "ref": "Sneha"
+   "ref": "Sneha",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -128,7 +140,8 @@
    "id": "MS13",
    "a": "Rakesh G M",
    "b": "Raghu Pathi",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -138,7 +151,8 @@
    "id": "MS14",
    "a": "Chethan Kumar s",
    "b": "Sivith",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -148,7 +162,8 @@
    "id": "MS15",
    "a": "Sourabh Madiwal",
    "b": "Prashanth y",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -158,7 +173,8 @@
    "id": "MS16",
    "a": "Navii",
    "b": "Manikanta",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -168,7 +184,8 @@
    "id": "MS17",
    "a": "Shrikant Hogtapur",
    "b": "Karthik",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -178,7 +195,8 @@
    "id": "MS18",
    "a": "Bhuvan shetty",
    "b": "Pavan Shubhakar",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -188,7 +206,8 @@
    "id": "MS19",
    "a": "Rakshith Gowda D P",
    "b": "Ashok",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -198,7 +217,8 @@
    "id": "MS20",
    "a": "Shrikant Bhajantri",
    "b": "Yash",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -208,7 +228,8 @@
    "id": "MS21",
    "a": "Vijaykumar",
    "b": "Venkat E",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -218,7 +239,8 @@
    "id": "MS22",
    "a": "Arsalan",
    "b": "Diwakar B L",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -228,7 +250,8 @@
    "id": "MS23",
    "a": "Arvind",
    "b": "K Sanjay Kumar",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-24",
@@ -238,7 +261,8 @@
    "id": "MS24",
    "a": "Manjesh Kumar K",
    "b": "Naveen Kumar R",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -248,7 +272,8 @@
    "id": "MS25",
    "a": "Nithin",
    "b": "Munish Sharma",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -258,7 +283,8 @@
    "id": "MS26",
    "a": "Vinay A N",
    "b": "Manjunath H",
-   "ref": "Sneha"
+   "ref": "Sneha",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -268,7 +294,8 @@
    "id": "MS27",
    "a": "Rakesh G M",
    "b": "Sivith",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -278,7 +305,8 @@
    "id": "MS28",
    "a": "Raghu Pathi",
    "b": "Chethan Kumar s",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -288,7 +316,8 @@
    "id": "MS29",
    "a": "Sourabh Madiwal",
    "b": "Manikanta",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -298,7 +327,8 @@
    "id": "MS30",
    "a": "Prashanth y",
    "b": "Navii",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -308,7 +338,8 @@
    "id": "MS31",
    "a": "Shrikant Hogtapur",
    "b": "Pavan Shubhakar",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -318,7 +349,8 @@
    "id": "MS32",
    "a": "Karthik",
    "b": "Bhuvan shetty",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -328,7 +360,8 @@
    "id": "MS33",
    "a": "Rakshith Gowda D P",
    "b": "Yash",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -338,7 +371,8 @@
    "id": "MS34",
    "a": "Ashok",
    "b": "Shrikant Bhajantri",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -348,7 +382,8 @@
    "id": "MS35",
    "a": "Vijaykumar",
    "b": "Diwakar B L",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-25",
@@ -358,7 +393,8 @@
    "id": "MS36",
    "a": "Venkat E",
    "b": "Arsalan",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-26",
@@ -368,7 +404,8 @@
    "id": "MS37",
    "a": "Arvind",
    "b": "Naveen Kumar R",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-26",
@@ -378,7 +415,8 @@
    "id": "MS38",
    "a": "K Sanjay Kumar",
    "b": "Manjesh Kumar K",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-11-26",
@@ -388,7 +426,8 @@
    "id": "MS39",
    "a": "Nithin",
    "b": "Manjunath H",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-26",
@@ -398,7 +437,8 @@
    "id": "MS40",
    "a": "Munish Sharma",
    "b": "Vinay A N",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-26",
@@ -408,7 +448,8 @@
    "id": "MS41",
    "a": "Rakesh G M",
    "b": "Chethan Kumar s",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-26",
@@ -418,7 +459,8 @@
    "id": "MS42",
    "a": "Sivith",
    "b": "Raghu Pathi",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -428,7 +470,8 @@
    "id": "WS01",
    "a": "Nischitha N",
    "b": "Suchitra V",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -438,7 +481,8 @@
    "id": "WS02",
    "a": "Kavyashree D",
    "b": "Akshatha",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -448,7 +492,8 @@
    "id": "WS03",
    "a": "Sneha",
    "b": "Suman R",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -458,7 +503,8 @@
    "id": "MD01",
    "a": "Smash Titans",
    "b": "Net Ninjas",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -468,7 +514,8 @@
    "id": "MD02",
    "a": "Table Titans",
    "b": "Pong Fiction",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -478,7 +525,8 @@
    "id": "WS04",
    "a": "Nischitha N",
    "b": "Akshatha",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -488,7 +536,8 @@
    "id": "WS05",
    "a": "Kavyashree D",
    "b": "Suman R",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -498,7 +547,8 @@
    "id": "WS06",
    "a": "Sneha",
    "b": "Suchitra V",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -508,7 +558,8 @@
    "id": "MD03",
    "a": "Smashers",
    "b": "Hot Shots",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -518,7 +569,8 @@
    "id": "MD04",
    "a": "Team players",
    "b": "Dilli Haryana united",
-   "ref": "Arvind"
+   "ref": "Arvind",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -528,7 +580,8 @@
    "id": "WS07",
    "a": "Nischitha N",
    "b": "Suman R",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -538,7 +591,8 @@
    "id": "WS08",
    "a": "Kavyashree D",
    "b": "Suchitra V",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -548,7 +602,8 @@
    "id": "WS09",
    "a": "Sneha",
    "b": "Akshatha",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-11-30",
@@ -558,7 +613,8 @@
    "id": "MD05",
    "a": "Smash Titans",
    "b": "Spin Masters",
-   "ref": "Sneha"
+   "ref": "Sneha",
+   "stage": "League"
   },
   {
    "date": "2026-12-01",
@@ -568,7 +624,8 @@
    "id": "MD06",
    "a": "Table Titans",
    "b": "K&B",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-12-01",
@@ -578,7 +635,8 @@
    "id": "MD07",
    "a": "Smashers",
    "b": "Kings United",
-   "ref": "Navneet"
+   "ref": "Navneet",
+   "stage": "League"
   },
   {
    "date": "2026-12-01",
@@ -588,7 +646,8 @@
    "id": "MD08",
    "a": "Team players",
    "b": "2 Guys",
-   "ref": "Yash"
+   "ref": "Yash",
+   "stage": "League"
   },
   {
    "date": "2026-12-01",
@@ -598,7 +657,8 @@
    "id": "MD09",
    "a": "Net Ninjas",
    "b": "Spin Masters",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-12-01",
@@ -608,7 +668,8 @@
    "id": "MD10",
    "a": "Pong Fiction",
    "b": "K&B",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-12-01",
@@ -618,7 +679,8 @@
    "id": "MD11",
    "a": "Hot Shots",
    "b": "Kings United",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-12-01",
@@ -628,7 +690,8 @@
    "id": "MD12",
    "a": "Dilli Haryana united",
    "b": "2 Guys",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   },
   {
    "date": "2026-12-02",
@@ -638,7 +701,8 @@
    "id": "WD01",
    "a": "Smash & Sass",
    "b": "RockSilk",
-   "ref": "Shrikant Hogtapur"
+   "ref": "Shrikant Hogtapur",
+   "stage": "League"
   },
   {
    "date": "2026-12-02",
@@ -648,7 +712,8 @@
    "id": "WD02",
    "a": "Duo Dynamite",
    "b": "RockSilk",
-   "ref": "Sourabh"
+   "ref": "Sourabh",
+   "stage": "League"
   },
   {
    "date": "2026-12-02",
@@ -658,7 +723,8 @@
    "id": "WD03",
    "a": "Duo Dynamite",
    "b": "Smash & Sass",
-   "ref": "Chethan"
+   "ref": "Chethan",
+   "stage": "League"
   }
  ],
  "chess": [
@@ -2127,5 +2193,6 @@
  ],
  "cricketFixtures": [],
  "volleyballFixtures": [],
- "updated": "2026-11-23T07:54:43+00:00"
+ "updated": "2026-11-23T07:54:43+00:00",
+ "festDates": "23 Nov – 12 Dec 2026"
 }
