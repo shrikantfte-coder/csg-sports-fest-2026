@@ -115,6 +115,18 @@ tr.changed td{background:var(--changed)}
 .status.ok{color:var(--ok)} .status.bad{color:var(--bad)} .status.warn{color:var(--warn)}
 ol.steps,ul.list{margin:0;padding-left:1.2em;display:grid;gap:4px}
 
+/* players & teams: one box per name, so a fix is a single tap on a phone */
+.block{display:grid;gap:12px}
+.block h3{font-size:1.35rem}
+.names{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:8px}
+.nrow{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;gap:4px}
+.nline{display:flex;gap:8px;align-items:center}
+.nin{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--sunk);font-weight:600}
+.nin:focus{outline:none;border-color:var(--accent);background:var(--surface)}
+.nmsg{font-size:.8rem}
+.nmsg.ok{color:var(--ok);font-weight:600}
+.nmsg.warn{color:var(--warn);font-weight:600}
+
 /* organiser logins */
 .banner{background:var(--changed);border-radius:12px;padding:12px 14px;font-size:.93rem}
 .linkbtn{border:0;background:none;padding:0;color:var(--accent);font-weight:600;text-decoration:underline;cursor:pointer}
@@ -169,7 +181,7 @@ details summary{cursor:pointer}
       <nav class="tabs" role="tablist">
         <button class="tab" role="tab" data-tab="winners">Update winners</button>
         <button class="tab" role="tab" data-tab="fixtures">Fixtures</button>
-        <button class="tab" role="tab" data-tab="teams">Teams</button>
+        <button class="tab" role="tab" data-tab="teams">Players &amp; teams</button>
         <button class="tab" role="tab" data-tab="qr">QR codes &amp; links</button>
         <button class="tab" role="tab" data-tab="publish">Publish</button>
         <button class="tab" role="tab" data-tab="settings">Login &amp; settings</button>
@@ -202,7 +214,7 @@ const SPORTS = [
   {list:"cricketFixtures", name:"Cricket", p:"Team", draw:"Tie", login:"cricket", teamKeys:["cricket"], teamTab:"cricket"},
   {list:"volleyballFixtures", name:"Volleyball", p:"Team", draw:"", login:"volleyball", teamKeys:["volleyball"], teamTab:"volleyball"},
 ];
-const TEAM_TABS = [["cricket","Cricket"],["volleyball","Volleyball"],["carrom","Carrom"],["chess","Chess groups"]];
+const TT_EVENTS = {MS:"Men's singles", WS:"Women's singles", MD:"Men's doubles", WD:"Women's doubles"};
 const sportOf = list => SPORTS.find(s=>s.list===list);
 const WIN = list => { const s = sportOf(list); return [["","Not played"],["a",s.p+" 1"],["b",s.p+" 2"]].concat(s.draw?[["draw",s.draw]]:[]); };
 const FIX = {
@@ -228,6 +240,7 @@ const ser = x => JSON.stringify(x ?? null, rep);
 
 let D = null, ORIGINAL = "", SHA = null, SESSION = null;
 let tab = "winners", fixSport = "tt", teamSport = "cricket", filterText = "", winSport = null, winView = null;
+let nameSport = "cricketFixtures", nameFilter = "", nameMsg = null;   // Players & teams tab: sport, search text, note shown after a rename
 let justSaved = {};   // sport list -> {user, pass} shown once after the admin sets a sport login
 
 /* ---------- who can do what ----------
@@ -237,7 +250,6 @@ const isAdmin = () => !SESSION || SESSION.role !== "sport";
 const myLists = () => isAdmin() ? SPORTS.map(s=>s.list) : (SESSION.sports||[]).filter(l=>sportOf(l));
 const mySports = () => SPORTS.filter(s=>myLists().includes(s.list));
 const myKeys = () => isAdmin() ? null : new Set(mySports().flatMap(s=>[s.list, ...s.teamKeys]));
-const myTeamTabs = () => isAdmin() ? TEAM_TABS : TEAM_TABS.filter(([k])=>mySports().some(s=>s.teamTab===k));
 const pick = (obj, keys) => keys ? Object.fromEntries(Object.entries(obj).filter(([k])=>keys.has(k))) : obj;
 const draftKey = () => "draft3:" + (SESSION?.user || "");
 
@@ -531,22 +543,92 @@ function viewFixtures(){
     <div class="tbl"><table><thead><tr>${S.cols.map(c=>`<th>${c[1]}</th>`).join("")}<th></th></tr></thead><tbody>${body || `<tr><td colspan="${S.cols.length+1}" class="muted" style="padding:16px">No matches yet. Use “Add match” to create the first one.</td></tr>`}</tbody></table></div>
   </div>`;
 }
+/* ---------- players & teams ----------
+   eachName visits every player or team name of one sport, wherever it is stored: the team lists,
+   the chess groups and both sides of every match (plus the referee in table tennis).
+   If fn returns a different string, that name is replaced. "Winner of M01" style slots are skipped. */
+const nkey = s => String(s ?? "").trim().replace(/\s+/g," ").toLowerCase();
+function eachName(list, fn){
+  const visit = (val, info) => {
+    const s = String(val ?? "").trim();
+    if(!s || Fest.isTBD(s)) return val;
+    const r = fn(s, info);
+    return r===undefined || r===s ? val : r;
+  };
+  (D[list]||[]).forEach(r => {
+    const where = list==="tt" ? (TT_EVENTS[r.event]||r.event||"") : list==="chess" && r.group ? `Group ${r.group}` : "";
+    ["a","b"].forEach(k => { if(r[k]!=null){ const v = visit(r[k], {match:true, where}); if(v!==r[k]) r[k] = v; } });
+    if(list==="tt" && r.ref!=null){ const v = visit(r.ref, {where:"Referee"}); if(v!==r.ref) r.ref = v; }
+  });
+  if(list==="carrom") (D.carromTeams||[]).forEach(t => { const v = visit(t.name, {listed:true, where:`Team ${t.no}`}); if(v!==t.name) t.name = v; });
+  if(list==="chess") Object.keys(D.chessGroups||{}).forEach(g => { D.chessGroups[g] = D.chessGroups[g].map(p => visit(p, {listed:true, where:`Group ${g}`})); });
+  const teams = list==="cricketFixtures" ? "cricket" : list==="volleyballFixtures" ? "volleyball" : null;
+  if(teams) (D[teams]||[]).forEach(t => {
+    const team = String(t.name||"").trim() || "Team";
+    const v = visit(t.name, {listed:true, where:"Team"}); if(v!==t.name) t.name = v;
+    t.players = (t.players||[]).map(p => { if(!Array.isArray(p)) return visit(p, {listed:true, where:team}); const v2 = visit(p[0], {listed:true, where:team}); return v2===p[0] ? p : [v2, p[1]]; });
+  });
+}
+/* One entry per name (spellings that differ only in capitals or spaces count as one). */
+function collectNames(list){
+  const m = new Map();
+  eachName(list, (name, info) => {
+    const k = nkey(name);
+    let e = m.get(k); if(!e) m.set(k, e = {key:k, spell:new Map(), where:new Set(), matches:0, listed:0});
+    e.spell.set(name, (e.spell.get(name)||0) + 1);
+    if(info.where) e.where.add(info.where);
+    if(info.match) e.matches++;
+    if(info.listed) e.listed++;
+  });
+  return [...m.values()].map(e => ({key:e.key, name:[...e.spell].sort((a,b)=>b[1]-a[1])[0][0], where:[...e.where].join(" · "), matches:e.matches, listed:e.listed}))
+    .sort((a,b) => a.name.localeCompare(b.name, undefined, {sensitivity:"base"}));
+}
+function renameName(list, oldKey, newName){
+  let n = 0;
+  eachName(list, name => { if(nkey(name)!==oldKey) return; n++; return newName; });
+  return n;
+}
 function viewTeams(){
-  const tabs = myTeamTabs();
-  if(!tabs.length) return `<div class="panel"><h2>Teams</h2><p class="note" style="margin:0">Table tennis players and pairs come from the fixtures. Edit them under <b>Fixtures</b>.</p></div>`;
-  if(!tabs.some(([k])=>k===teamSport)) teamSport = tabs[0][0];
-  const opts = tabs.length>1 ? `<select id="teamSport" class="btn" aria-label="Sport">${tabs.map(([k,n])=>`<option value="${k}" ${k===teamSport?"selected":""}>${n}</option>`).join("")}</select>` : `<b>${esc(tabs[0][1])}</b>`;
-  let inner = "";
+  const sports = mySports();
+  if(!sports.some(s=>s.list===nameSport)) nameSport = sports[0].list;
+  const S = sportOf(nameSport); teamSport = S.teamTab;
+  const sel = sports.length>1 ? `<select id="nameSport" class="btn" aria-label="Sport">${sports.map(s=>`<option value="${s.list}" ${s.list===nameSport?"selected":""}>${s.name}</option>`).join("")}</select>` : `<b>${esc(S.name)}</b>`;
+  const names = collectNames(nameSport), f = nameFilter.trim().toLowerCase();
+  const shown = f ? names.filter(x => x.name.toLowerCase().includes(f) || x.where.toLowerCase().includes(f)) : names;
+  const meta = x => [x.where, x.matches ? `${x.matches} ${x.matches===1?"match":"matches"}` : ""].filter(Boolean).join(" · ");
+  /* Two people with the same name share one box, so say so: Save changes both, the list below changes one. */
+  const twice = x => x.listed > 1 ? `<small class="nmsg warn">Listed ${x.listed===2?"twice":x.listed+" times"}. Save changes ${x.listed===2?"both":"all of them"}; to change just one, edit the list below.</small>` : "";
+  const cards = shown.map(x => `<div class="nrow"><div class="nline"><input class="nin" value="${esc(x.name)}" data-orig="${esc(x.name)}" aria-label="Name: ${esc(x.name)}" autocomplete="off" spellcheck="false"><button class="btn small primary" type="button" data-rename="${esc(x.key)}" disabled>Save</button></div>${
+      nameMsg && nameMsg.key===x.key ? `<small class="nmsg ok">✓ ${esc(nameMsg.text)}</small>` : `<small class="nmsg muted">${esc(meta(x))}</small>${twice(x)}`}</div>`).join("");
+  const scope = {tt:"every match and referee slot", carrom:"the team list and every match", chess:"the groups and every match"}[nameSport] || "the team lists and every match";
+  const empty = !names.length ? `No names yet. Add ${S.p==="Team"?"teams":"players"} below${nameSport==="tt"?" or under Fixtures":""}.` : "No names match that search.";
+  let roster = "";
   if(teamSport==="cricket" || teamSport==="volleyball"){
-    inner = `<div class="teams">${D[teamSport].map((t,i)=>`<div class="team"><label for="tn${i}">Team name</label><input id="tn${i}" data-team="${i}" value="${esc(t.name)}"><label for="tp${i}">Players, one per line${teamSport==="volleyball"?" (add “, Position” if known)":""}</label><textarea id="tp${i}" data-players="${i}">${esc(t.players.map(p=>Array.isArray(p)?(p[1]?p[0]+", "+p[1]:p[0]):p).join("\n"))}</textarea><button class="btn small danger" data-delteam="${i}">Remove team</button></div>`).join("")}</div>
+    roster = `<h3>Add or remove players and teams</h3>
+      <p class="muted" style="margin:0">One player per line, in the order the site shows them.${teamSport==="volleyball"?" Add “, Position” after a name if known.":""}</p>
+      <div class="teams">${D[teamSport].map((t,i)=>`<div class="team"><label for="tn${i}">Team name</label><input id="tn${i}" data-team="${i}" value="${esc(t.name)}"><label for="tp${i}">Players, one per line</label><textarea id="tp${i}" data-players="${i}">${esc(t.players.map(p=>Array.isArray(p)?(p[1]?p[0]+", "+p[1]:p[0]):p).join("\n"))}</textarea><button class="btn small danger" data-delteam="${i}">Remove team</button></div>`).join("")}</div>
       <div><button class="btn" id="addTeam">+ Add team</button></div>`;
   } else if(teamSport==="carrom"){
-    inner = `<div class="tbl"><table><thead><tr><th>Team no.</th><th>Team name</th><th>Round 1 match</th><th></th></tr></thead><tbody>${D.carromTeams.map((t,i)=>`<tr><td class="w-s"><input data-ct="${i}" data-k="no" value="${esc(t.no)}" aria-label="Team number"></td><td class="w-l"><input data-ct="${i}" data-k="name" value="${esc(t.name)}" aria-label="Team name"></td><td class="w-s"><input data-ct="${i}" data-k="r1" value="${esc(t.r1)}" aria-label="Round 1 match"></td><td><button class="btn small danger" data-delct="${i}" aria-label="Remove team">✕</button></td></tr>`).join("")}</tbody></table></div><div><button class="btn" id="addCT">+ Add team</button></div>
-      <p class="note" style="margin:0">Renaming a team here does not rename it in the fixtures. Change it under <b>Fixtures</b> too.</p>`;
+    roster = `<h3>Carrom teams</h3>
+      <div class="tbl"><table><thead><tr><th>Team no.</th><th>Team name</th><th>Round 1 match</th><th></th></tr></thead><tbody>${D.carromTeams.map((t,i)=>`<tr><td class="w-s"><input data-ct="${i}" data-k="no" value="${esc(t.no)}" aria-label="Team number"></td><td class="w-l"><input data-ct="${i}" data-k="name" value="${esc(t.name)}" aria-label="Team name"></td><td class="w-s"><input data-ct="${i}" data-k="r1" value="${esc(t.r1)}" aria-label="Round 1 match"></td><td><button class="btn small danger" data-delct="${i}" aria-label="Remove team">✕</button></td></tr>`).join("")}</tbody></table></div><div><button class="btn" id="addCT">+ Add team</button></div>
+      <p class="note" style="margin:0">A name typed in this table changes the team list only. To rename a team in its matches too, use <b>Edit names</b> above.</p>`;
+  } else if(teamSport==="chess"){
+    roster = `<h3>Chess groups</h3>
+      <div class="teams">${Object.entries(D.chessGroups).map(([g,ps])=>`<div class="team"><label for="pl${g}">Group ${g} · plays</label><input id="pl${g}" data-plays="${g}" value="${esc(D.chessPlays[g]||"")}"><label for="cg${g}">Players, one per line</label><textarea id="cg${g}" data-group="${g}">${esc(ps.join("\n"))}</textarea></div>`).join("")}</div>
+      <p class="note" style="margin:0">Adding a player to a group doesn't add their matches. Add those under <b>Fixtures</b>.</p>`;
   } else {
-    inner = `<div class="teams">${Object.entries(D.chessGroups).map(([g,ps])=>`<div class="team"><label for="pl${g}">Group ${g} · plays</label><input id="pl${g}" data-plays="${g}" value="${esc(D.chessPlays[g]||"")}"><label for="cg${g}">Players, one per line</label><textarea id="cg${g}" data-group="${g}">${esc(ps.join("\n"))}</textarea></div>`).join("")}</div>`;
+    roster = `<p class="note" style="margin:0">Table tennis players and pairs come from the fixtures. To add someone, add their match under <b>Fixtures</b>.</p>`;
   }
-  return `<div class="panel"><div class="row"><h2>Teams</h2><span class="grow"></span>${opts}</div>${inner}</div>`;
+  return `<div class="panel">
+    <div class="row"><h2>Players &amp; teams</h2><span class="grow"></span>${sel}</div>
+    <section class="block">
+      <h3>Edit names</h3>
+      <p class="muted" style="margin:0">Fix a name and tap <b>Save</b>. It changes in ${scope} for ${esc(S.name)} at once. Nothing goes live until you publish.</p>
+      <div class="row"><input id="nameFilter" class="btn" style="font-weight:400;flex:1 1 220px;max-width:360px" placeholder="Find a name or team" value="${esc(nameFilter)}" aria-label="Find a name or team"><span class="muted">${f?`${shown.length} of ${names.length}`:names.length} ${names.length===1?"name":"names"}</span></div>
+      ${cards ? `<div class="names">${cards}</div>` : `<p class="note" style="margin:0">${empty}</p>`}
+    </section>
+    <section class="block">${roster}</section>
+  </div>`;
 }
 function tokenSteps(){
   return `<ol class="steps"><li>Sign in to GitHub as the repository owner.</li>
@@ -619,8 +701,6 @@ function viewSettings(){
 }
 
 function render(){
-  const teamsTab = document.querySelector('.tab[data-tab="teams"]');
-  if(teamsTab) teamsTab.hidden = !myTeamTabs().length;
   const setTab = document.querySelector('.tab[data-tab="settings"]');
   if(setTab) setTab.textContent = isAdmin() ? "Login & settings" : "My login";
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===tab));
@@ -628,7 +708,7 @@ function render(){
   $("#main").innerHTML = ({winners:viewWinners, fixtures:viewFixtures, teams:viewTeams, qr:viewQR, publish:viewPublish, settings:viewSettings})[tab]();
   $("#who").textContent = SESSION ? `Signed in as ${SESSION.user}${isAdmin()?" (admin)":` · ${mySports().map(s=>s.name).join(", ")}`}` : "";
   markDirty();
-  if(focusId==="filter"){ const f=$("#filter"); f.focus(); f.setSelectionRange(f.value.length,f.value.length); }
+  if(focusId==="filter" || focusId==="nameFilter"){ const f=$("#"+focusId); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
 }
 
 /* ---------- settings actions ---------- */
@@ -692,7 +772,21 @@ async function setSportLogin(list, remove){
 /* ---------- events ---------- */
 document.addEventListener("click", async e => {
   const t = e.target.closest("button, a"); if(!t) return;
-  if(t.dataset.tab){ tab = t.dataset.tab; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.tab){ tab = t.dataset.tab; nameMsg = null; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.rename!==undefined){
+    const box = t.closest(".nrow"), inp = box.querySelector(".nin"), note = box.querySelector(".nmsg");
+    const nv = inp.value.trim().replace(/\s+/g," "), old = t.dataset.rename;
+    if(!nv || nv===inp.dataset.orig) return;
+    const clash = nkey(nv)!==old && collectNames(nameSport).find(x=>x.key===nkey(nv));
+    if(clash && t.dataset.sure!=="1"){
+      t.dataset.sure = "1"; t.textContent = "Merge";
+      note.className = "nmsg warn"; note.textContent = `“${clash.name}” is already on the list. Tap Merge if they are the same person or team.`;
+      return;
+    }
+    const n = renameName(nameSport, old, nv);
+    nameMsg = {key:nkey(nv), text:`Saved in ${n} ${n===1?"place":"places"}. Publish to put it on the site.`};
+    render(); return;
+  }
   if(t.dataset.win){
     const row = D[winSport][+t.dataset.i], side = t.dataset.win;
     if(row.winner===side) delete row.winner; else row.winner = side;
@@ -734,6 +828,13 @@ document.addEventListener("click", async e => {
 });
 document.addEventListener("input", e => {
   const el = e.target, ds = el.dataset;
+  if(el.classList.contains("nin")){
+    const b = el.closest(".nrow").querySelector("[data-rename]"), v = el.value.trim().replace(/\s+/g," ");
+    b.disabled = !v || v===el.dataset.orig;
+    if(b.dataset.sure){ delete b.dataset.sure; b.textContent = "Save"; }
+    return;
+  }
+  if(el.id==="nameFilter"){ nameFilter = el.value; nameMsg = null; render(); return; }
   if(el.id==="filter"){ filterText = el.value; render(); return; }
   if(el.id==="festDatesInput" && isAdmin()){ D.festDates = el.value; markDirty(); return; }
   if(ds.score!==undefined){ const row = D[winSport][+ds.score]; if(el.value.trim()) row.result = el.value; else delete row.result; markDirty(); return; }
@@ -750,9 +851,12 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   if(e.target.id==="fixSport"){ fixSport = e.target.value; filterText=""; render(); }
-  if(e.target.id==="teamSport"){ teamSport = e.target.value; render(); }
+  if(e.target.id==="nameSport"){ nameSport = e.target.value; nameFilter = ""; nameMsg = null; render(); }
   if(e.target.id==="winSport"){ winSport = e.target.value; winView = null; render(); }
   if(e.target.id==="remember" && !e.target.checked) store.set("ghtoken", null);
+});
+document.addEventListener("keydown", e => {
+  if(e.key==="Enter" && e.target.classList?.contains("nin")){ e.preventDefault(); const b = e.target.closest(".nrow").querySelector("[data-rename]"); if(!b.disabled) b.click(); }
 });
 
 /* ---------- printing ---------- */
@@ -772,7 +876,7 @@ function whenImages(cb){
 
 async function start(){
   if(!SESSION.role) SESSION.role = "admin";
-  if(!isAdmin()){ const s = mySports()[0]; if(!s){ sess.set(null); location.reload(); return; } fixSport = s.list; winSport = s.list; if(s.teamTab) teamSport = s.teamTab; }
+  if(!isAdmin()){ const s = mySports()[0]; if(!s){ sess.set(null); location.reload(); return; } fixSport = s.list; winSport = s.list; nameSport = s.list; if(s.teamTab) teamSport = s.teamTab; }
   $("#login").hidden = true; $("#app").hidden = false;
   $("#main").innerHTML = `<p class="muted">Loading…</p>`;
   try{ await loadData(); }catch(_){ $("#main").innerHTML = `<p class="status bad">Could not load the fest data. Check your connection and reload.</p>`; return; }

@@ -18,7 +18,9 @@ which can only update that sport's winners, fixtures and teams. From there they 
 
 - **Update winners**: tap the winner of each match. "Winner of M01" slots, the carrom round robin and
   the final fill in automatically, and the site shows standings and champions.
-- **Fixtures / Teams**: edit or add matches, results, rosters and the fest dates.
+- **Fixtures**: edit or add matches, results and the fest dates.
+- **Players & teams**: fix a player or team name once and it changes everywhere in that sport (team
+  lists, chess groups, every match and table tennis referees); add or remove players and teams.
 - **QR codes & links**: copy links, download QR images, print an A4 sheet or a poster per sport.
 - **Publish**: saves `data.json` to this repository; GitHub Pages updates the site within ~2 minutes.
   Changes from two organisers at once are merged match by match.
