@@ -1,7 +1,10 @@
 {
  "v": 2,
  "note": "Organiser logins for admin.html. Each login is encrypted with its own password. Change them from the admin page, not by hand.",
- "vault": null,
+ "vault": {
+  "iv": "wm2bk/g/Oa39NBZs",
+  "data": "wSJwSoJ0Abj9wNznVh3dYN2/BHz0w9lc09cKn8zNtvQ99irUlelc+MlZigStrLuKDZTueATfV4PZu3D6O7E2I8IfiXKYlrkbFROzHuvOMXB+7YvgdSSlbcrAJJUmYNngzmpYy/1X6fLKDN4ompIVKZlaYSsWt2pQzw=="
+ },
  "users": {
   "admin": {
    "role": "admin",
@@ -57,5 +60,5 @@
    "data": "7INYigYo/fYlF5hZI9J3jU/mB91sqcD6LGIiZZCp9SAu8YGRIAZ7YCq6y2W3k/jTOpdsAXY+JsPSmPDgkMtts7gHfkDbVgv6ZL9HE+657E9t2YyuyZKIzOh2rKnzPRQ/hYwk9xcV"
   }
  },
- "updated": "2026-11-23T15:31:30.821Z"
+ "updated": "2026-11-23T15:44:13.392Z"
 }
