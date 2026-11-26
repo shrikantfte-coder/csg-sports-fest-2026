@@ -2129,7 +2129,7 @@
    ]
   },
   {
-   "name": "Raising Learners",
+   "name": "Rising Learners",
    "players": [
     "Santhosh Kumbar",
     "Rahul",
@@ -2202,8 +2202,186 @@
    ]
   }
  ],
- "cricketFixtures": [],
- "volleyballFixtures": [],
- "updated": "2026-11-23T16:03:49.300Z",
+ "cricketFixtures": [
+  {
+   "id": "M01",
+   "date": "2026-12-11",
+   "time": "9:00 AM",
+   "stage": "League",
+   "a": "Tech Tigers",
+   "b": "Thunder Strikers"
+  },
+  {
+   "id": "M02",
+   "date": "2026-12-11",
+   "time": "10:00 AM",
+   "stage": "League",
+   "a": "Royal Challengers",
+   "b": "Avengers"
+  },
+  {
+   "id": "M03",
+   "date": "2026-12-11",
+   "time": "11:00 AM",
+   "stage": "League",
+   "a": "Royal Riders",
+   "b": "Rising Learners"
+  },
+  {
+   "id": "M04",
+   "date": "2026-12-11",
+   "time": "1:00 PM",
+   "stage": "League",
+   "a": "Tech Tigers",
+   "b": "Royal Challengers"
+  },
+  {
+   "id": "M05",
+   "date": "2026-12-11",
+   "time": "2:00 PM",
+   "stage": "League",
+   "a": "Thunder Strikers",
+   "b": "Royal Riders"
+  },
+  {
+   "id": "M06",
+   "date": "2026-12-11",
+   "time": "3:00 PM",
+   "stage": "League",
+   "a": "Avengers",
+   "b": "Rising Learners"
+  },
+  {
+   "id": "M07",
+   "date": "2026-12-12",
+   "time": "9:00 AM",
+   "stage": "League",
+   "a": "Thunder Strikers",
+   "b": "Rising Learners"
+  },
+  {
+   "id": "M08",
+   "date": "2026-12-12",
+   "time": "10:00 AM",
+   "stage": "League",
+   "a": "Royal Challengers",
+   "b": "Royal Riders"
+  },
+  {
+   "id": "M09",
+   "date": "2026-12-12",
+   "time": "11:00 AM",
+   "stage": "League",
+   "a": "Tech Tigers",
+   "b": "Avengers"
+  },
+  {
+   "id": "M10",
+   "date": "2026-12-12",
+   "time": "1:00 PM",
+   "stage": "Qualifier 1",
+   "a": "1st in League",
+   "b": "2nd in League"
+  },
+  {
+   "id": "M11",
+   "date": "2026-12-12",
+   "time": "2:00 PM",
+   "stage": "Eliminator",
+   "a": "3rd in League",
+   "b": "4th in League"
+  },
+  {
+   "id": "M12",
+   "date": "2026-12-12",
+   "time": "3:00 PM",
+   "stage": "Qualifier 2",
+   "a": "Loser of M10",
+   "b": "Winner of M11"
+  },
+  {
+   "id": "M13",
+   "date": "2026-12-12",
+   "time": "4:00 PM",
+   "stage": "Final",
+   "a": "Winner of M10",
+   "b": "Winner of M12"
+  }
+ ],
+ "volleyballFixtures": [
+  {
+   "id": "M01",
+   "date": "2026-12-05",
+   "time": "7:30 AM",
+   "stage": "Group A",
+   "a": "Royal Slayer",
+   "b": "Team LYNX"
+  },
+  {
+   "id": "M02",
+   "date": "2026-12-05",
+   "time": "8:30 AM",
+   "stage": "Group B",
+   "a": "Kings United",
+   "b": "Hustlers"
+  },
+  {
+   "id": "M03",
+   "date": "2026-12-05",
+   "time": "9:30 AM",
+   "stage": "Group A",
+   "a": "Royal Slayer",
+   "b": "Team Ace"
+  },
+  {
+   "id": "M04",
+   "date": "2026-12-05",
+   "time": "10:50 AM",
+   "stage": "Group B",
+   "a": "Kings United",
+   "b": "Tech Tigers"
+  },
+  {
+   "id": "M05",
+   "date": "2026-12-05",
+   "time": "11:50 AM",
+   "stage": "Group A",
+   "a": "Team LYNX",
+   "b": "Team Ace"
+  },
+  {
+   "id": "M06",
+   "date": "2026-12-05",
+   "time": "12:50 PM",
+   "stage": "Group B",
+   "a": "Hustlers",
+   "b": "Tech Tigers"
+  },
+  {
+   "id": "M07",
+   "date": "2026-12-05",
+   "time": "2:20 PM",
+   "stage": "Semi-final 1",
+   "a": "1st in Group A",
+   "b": "2nd in Group B"
+  },
+  {
+   "id": "M08",
+   "date": "2026-12-05",
+   "time": "3:20 PM",
+   "stage": "Semi-final 2",
+   "a": "1st in Group B",
+   "b": "2nd in Group A"
+  },
+  {
+   "id": "M09",
+   "date": "2026-12-05",
+   "time": "4:20 PM",
+   "stage": "Final",
+   "a": "Winner of M07",
+   "b": "Winner of M08"
+  }
+ ],
+ "updated": "2026-11-26T14:45:56.000Z",
  "festDates": "23 Nov – 12 Dec 2026"
 }

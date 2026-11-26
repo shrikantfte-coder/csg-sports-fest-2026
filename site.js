@@ -172,7 +172,14 @@ function teamSportBody(sport, list, teamsHTML, teamNames){
   const all = MATCHES.filter(m=>m.sport===sport);
   if(!all.length) return `<div class="soon"><h3>Fixtures coming soon</h3><p>Match dates and times will be posted here once they are ready.</p></div>${teamsHTML}`;
   const league = all.filter(m=>!Fest.isKnockout(list,{stage:m.stage}));
-  const table = league.some(decided) ? `<section class="sec"><div class="sec-h"><h3>Points table</h3><span>${sport==="cricket"?"Win 2, tie 1":"Wins so far"}</span></div><div class="team">${standings(Fest.table(league,teamNames,Fest.POINTS[list]),{cols:sport==="cricket"?["p","w","d","l","pts"]:["p","w","l"], heads:{d:"T"}, label:"Team", show:s=>s})}</div></section>` : "";
+  const opts = {cols:sport==="cricket"?["p","w","d","l","pts"]:["p","w","l","pts"], heads:{d:"T"}, label:"Team", show:s=>s};
+  const note = sport==="cricket" ? "Win 2, tie 1. Top 4 go to the playoffs." : "Win 2. Top 2 in each group go to the semi-finals.";
+  // Teams split into groups ("Group A", "Group B") get one table per group.
+  const groups = [...new Set(league.map(m=>m.stage).filter(g=>/^group\b/i.test(g||"")))].sort();
+  const tables = groups.length
+    ? `<div class="grid">${groups.map(g=>{ const ms = league.filter(m=>m.stage===g); const names = [...new Set(ms.flatMap(m=>[m.A,m.B]).filter(n=>n&&!isTBD(n)))]; return `<div class="team"><h4>${esc(g)}</h4>${standings(Fest.table(ms,names,Fest.POINTS[list]),opts)}</div>`; }).join("")}</div>`
+    : `<div class="team">${standings(Fest.table(league,teamNames,Fest.POINTS[list]),opts)}</div>`;
+  const table = league.some(decided) || groups.length ? `<section class="sec"><div class="sec-h"><h3>${groups.length?"Groups &amp; standings":"Points table"}</h3><span>${note}</span></div>${tables}</section>` : "";
   return `<section class="sec"><div class="sec-h"><h3>Fixtures</h3><span>${all.length} matches</span></div>${dayBlocks(all)}</section>${table}${teamsHTML}`;
 }
 function viewCricket(){

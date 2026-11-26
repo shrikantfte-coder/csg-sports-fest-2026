@@ -5,19 +5,19 @@
    A match stores its winner as "a" (team/player 1), "b" (team/player 2) or "draw". */
 window.Fest = (() => {
   const norm = s => String(s ?? "").toLowerCase().replace(/[^\p{L}\p{N}\p{M}]/gu, "").replace(/h/g, "");
-  const isTBD = s => /^(winner of|loser of|1st in|2nd in|3rd in)\b/i.test(String(s ?? "").trim());
+  const isTBD = s => /^(winner of|loser of|1st in|2nd in|3rd in|4th in)\b/i.test(String(s ?? "").trim());
   const LISTS = ["tt", "carrom", "chess", "cricketFixtures", "volleyballFixtures"];
   const POINTS = {
     tt: { w: 1, d: 0, l: 0 },
     carrom: { w: 2, d: 1, l: 0 },
     chess: { w: 1, d: 0.5, l: 0 },
     cricketFixtures: { w: 2, d: 1, l: 0 },
-    volleyballFixtures: { w: 1, d: 0, l: 0 },
+    volleyballFixtures: { w: 2, d: 0, l: 0 },
   };
   const idOf = (key, r) => key === "chess" ? String(r.no ?? "") : String(r.id ?? "");
   const stageOf = (key, r) => String((key === "tt" ? (r.stage || "League") : key === "carrom" || key === "chess" ? r.round : r.stage) || "").trim();
   const isFinal = (key, r) => /^final$/i.test(stageOf(key, r));
-  const isKnockout = (key, r) => /final|semi|quarter|knock|^r\d$|^sf$|^qf$/i.test(stageOf(key, r)) && !/^rr$|round robin/i.test(stageOf(key, r));
+  const isKnockout = (key, r) => /final|semi|quarter|knock|qualif|elimin|^r\d$|^sf$|^qf$/i.test(stageOf(key, r)) && !/^rr$|round robin/i.test(stageOf(key, r));
   const isRR = (key, r) => key === "carrom" && /^(rr|round robin)$/i.test(stageOf(key, r));
   const hasWinner = r => r.winner === "a" || r.winner === "b" || r.winner === "draw";
 
@@ -66,13 +66,26 @@ window.Fest = (() => {
       function name(s, depth = 0) {
         s = String(s ?? "").trim();
         if (depth > 30) return s;
-        let m = /^winner of\s+(.+)$/i.exec(s);
+        let m = /^(winner|loser) of\s+(.+)$/i.exec(s);
         if (m) {
-          const r = byId.get(norm(m[1]));
+          const r = byId.get(norm(m[2]));
           if (!r || (r.winner !== "a" && r.winner !== "b")) return s;
-          const next = name(r[r.winner], depth + 1);
-          const other = name(r[r.winner === "a" ? "b" : "a"], depth + 1);
+          const loser = r.winner === "a" ? "b" : "a";
+          const want = m[1].toLowerCase() === "winner" ? r.winner : loser;
+          const next = name(r[want], depth + 1);
+          const other = name(r[want === "a" ? "b" : "a"], depth + 1);
           return isTBD(next) || isTBD(other) ? s : next;
+        }
+        m = /^(1st|2nd|3rd|4th)\s+in\s+(group\s+\S+)$/i.exec(s);
+        if (m) {
+          // Group stage (e.g. volleyball "Group A"): filled in once every group match has a winner
+          // and nobody is level on points with that place.
+          const g = norm(m[2]);
+          const ms = raw.filter(r => norm(stageOf(key, r)) === g).map(r => ({ ...r, A: r.a, B: r.b }));
+          const rows = table(ms, [], POINTS[key]);
+          const i = parseInt(m[1], 10) - 1;
+          const clear = rows[i] && (!rows[i - 1] || rows[i - 1].pts > rows[i].pts) && (!rows[i + 1] || rows[i + 1].pts < rows[i].pts);
+          return ms.length && ms.every(decided) && clear ? rows[i].name : s;
         }
         m = /^(1st|2nd)\s+in\s+round\s*robin$/i.exec(s);
         if (m) {
