@@ -2312,7 +2312,7 @@
   {
    "id": "M01",
    "date": "2026-12-05",
-   "time": "7:30 AM",
+   "time": "10:00 AM",
    "stage": "Group A",
    "a": "Royal Slayer",
    "b": "Team LYNX"
@@ -2320,7 +2320,7 @@
   {
    "id": "M02",
    "date": "2026-12-05",
-   "time": "8:30 AM",
+   "time": "10:45 AM",
    "stage": "Group B",
    "a": "Kings United",
    "b": "Hustlers"
@@ -2328,7 +2328,7 @@
   {
    "id": "M03",
    "date": "2026-12-05",
-   "time": "9:30 AM",
+   "time": "11:30 AM",
    "stage": "Group A",
    "a": "Royal Slayer",
    "b": "Team Ace"
@@ -2336,7 +2336,7 @@
   {
    "id": "M04",
    "date": "2026-12-05",
-   "time": "10:50 AM",
+   "time": "12:45 PM",
    "stage": "Group B",
    "a": "Kings United",
    "b": "Tech Tigers"
@@ -2344,7 +2344,7 @@
   {
    "id": "M05",
    "date": "2026-12-05",
-   "time": "11:50 AM",
+   "time": "1:30 PM",
    "stage": "Group A",
    "a": "Team LYNX",
    "b": "Team Ace"
@@ -2352,7 +2352,7 @@
   {
    "id": "M06",
    "date": "2026-12-05",
-   "time": "12:50 PM",
+   "time": "2:15 PM",
    "stage": "Group B",
    "a": "Hustlers",
    "b": "Tech Tigers"
@@ -2360,7 +2360,7 @@
   {
    "id": "M07",
    "date": "2026-12-05",
-   "time": "2:20 PM",
+   "time": "3:20 PM",
    "stage": "Semi-final 1",
    "a": "1st in Group A",
    "b": "2nd in Group B"
@@ -2368,7 +2368,7 @@
   {
    "id": "M08",
    "date": "2026-12-05",
-   "time": "3:20 PM",
+   "time": "4:05 PM",
    "stage": "Semi-final 2",
    "a": "1st in Group B",
    "b": "2nd in Group A"
@@ -2376,12 +2376,12 @@
   {
    "id": "M09",
    "date": "2026-12-05",
-   "time": "4:20 PM",
+   "time": "4:50 PM",
    "stage": "Final",
    "a": "Winner of M07",
    "b": "Winner of M08"
   }
  ],
- "updated": "2026-11-26T14:45:56.000Z",
+ "updated": "2026-11-26T14:50:31.000Z",
  "festDates": "23 Nov – 12 Dec 2026"
 }
