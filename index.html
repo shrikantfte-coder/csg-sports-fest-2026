@@ -11,7 +11,7 @@
 /* Layout: sticky sport tabs + search on top; each view is a single column of day-grouped fixture lists, teams below. */
 :root{
   --bg:#f4f6f8; --surface:#ffffff; --sunk:#eceff3; --fg:#141922; --muted:#5a6473; --line:#dde2e8;
-  --tt:#d0432a; --carrom:#a86a12; --chess:#3d4466; --cricket:#1c7f47; --volley:#1d63c4; --all:#141922;
+  --tt:#d0432a; --carrom:#a86a12; --chess:#3d4466; --cricket:#1c7f47; --volley:#1d63c4; --badminton:#8a3fb8; --all:#141922;
   --today:#e8a400; --today-bg:#fff6dc; --win:#17773f; --win-bg:#e2f3e8;
   --qr-bg:#ffffff;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
@@ -20,11 +20,11 @@
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0e1116; --surface:#171b22; --sunk:#1f242d; --fg:#eef1f5; --muted:#9ba4b3; --line:#2b313b;
-  --tt:#ff7a5c; --carrom:#e2a54a; --chess:#a9b1e0; --cricket:#4fc985; --volley:#6aa8ff; --all:#eef1f5;
+  --tt:#ff7a5c; --carrom:#e2a54a; --chess:#a9b1e0; --cricket:#4fc985; --volley:#6aa8ff; --badminton:#c58ae6; --all:#eef1f5;
   --today:#ffc83d; --today-bg:#2c2510; --win:#5fd394; --win-bg:#15301f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1116; --surface:#171b22; --sunk:#1f242d; --fg:#eef1f5; --muted:#9ba4b3; --line:#2b313b;
-  --tt:#ff7a5c; --carrom:#e2a54a; --chess:#a9b1e0; --cricket:#4fc985; --volley:#6aa8ff; --all:#eef1f5;
+  --tt:#ff7a5c; --carrom:#e2a54a; --chess:#a9b1e0; --cricket:#4fc985; --volley:#6aa8ff; --badminton:#c58ae6; --all:#eef1f5;
   --today:#ffc83d; --today-bg:#2c2510; --win:#5fd394; --win-bg:#15301f; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}

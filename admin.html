@@ -205,6 +205,7 @@ const PAGES = [
   {id:"chess", name:"Chess", hash:"#chess"},
   {id:"cricket", name:"Cricket", hash:"#cricket"},
   {id:"volleyball", name:"Volleyball", hash:"#volleyball"},
+  {id:"badminton", name:"Badminton", hash:"#badminton"},
 ];
 /* login: the default username for that sport's organiser. teamKeys: the parts of data.json that sport's login may change besides its fixtures. */
 const SPORTS = [
@@ -213,6 +214,7 @@ const SPORTS = [
   {list:"chess", name:"Chess", p:"Player", draw:"Draw", login:"chess", teamKeys:["chessGroups","chessPlays"], teamTab:"chess"},
   {list:"cricketFixtures", name:"Cricket", p:"Team", draw:"Tie", login:"cricket", teamKeys:["cricket"], teamTab:"cricket"},
   {list:"volleyballFixtures", name:"Volleyball", p:"Team", draw:"", login:"volleyball", teamKeys:["volleyball"], teamTab:"volleyball"},
+  {list:"badminton", name:"Badminton", p:"Player", draw:"", login:"badminton", teamKeys:[], teamTab:null},
 ];
 const TT_EVENTS = {MS:"Men's singles", WS:"Women's singles", MD:"Men's doubles", WD:"Women's doubles"};
 const sportOf = list => SPORTS.find(s=>s.list===list);
@@ -222,6 +224,7 @@ const FIX = {
   carrom:{cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["round","Round",["R1","R2","R3","RR","FINAL"]],["a","Team 1","l"],["b","Team 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
   chess:{cols:[["no","#","s"],["date","Date","date"],["slot","Slot","t"],["group","Group","s"],["round","Round","s"],["board","Board","s"],["a","Player 1","l"],["b","Player 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
   cricketFixtures:{cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
+  badminton:{cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["event","Event",["MS","WS","MD","WD"]],["stage","Stage",["League","Quarter-final","Semi-final","Final"]],["a","Player / pair 1","l"],["b","Player / pair 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
   volleyballFixtures:{cols:[["id","Match","s"],["date","Date","date"],["time","Time","t"],["stage","Stage","s"],["a","Team 1","l"],["b","Team 2","l"],["winner","Winner","win"],["result","Score / note","l"]]},
 };
 const $ = s => document.querySelector(s);
@@ -375,7 +378,7 @@ $("#loginForm").addEventListener("submit", async e => {
 $("#logout").addEventListener("click", () => { sess.set(null); location.reload(); });
 
 /* ---------- data, drafts and merging ---------- */
-function freshLists(d){ d.cricketFixtures ||= []; d.volleyballFixtures ||= []; return d; }
+function freshLists(d){ d.cricketFixtures ||= []; d.volleyballFixtures ||= []; d.badminton ||= []; return d; }
 function merge(base, mine, theirs){
   const out = {...theirs}, conflicts = [];
   new Set([...Object.keys(base), ...Object.keys(mine), ...Object.keys(theirs)]).forEach(k => {
@@ -499,7 +502,7 @@ function winCard(list, r){
   const S = sportOf(list);
   const id = list==="chess" ? (r.no?`#${r.no}`:"") : (r.id||"");
   const time = r.start || r.time || r.slot || "";
-  const stage = list==="tt" ? `${r.event}${r.stage&&r.stage!=="League"?" "+r.stage:""}` : list==="chess" ? (r.group?`Group ${r.group} · ${r.round}`:r.round) : list==="carrom" ? r.round : r.stage;
+  const stage = list==="tt"||list==="badminton" ? `${r.event}${r.stage&&r.stage!=="League"?" "+r.stage:""}` : list==="chess" ? (r.group?`Group ${r.group} · ${r.round}`:r.round) : list==="carrom" ? r.round : r.stage;
   const meta = [id, fmtDay(r.date), time, stage].filter(Boolean).map(esc).join(" · ");
   const waiting = [r.A, r.B].filter(Fest.isTBD);
   const blocked = waiting.length > 0, done = Fest.hasWinner(r) && !blocked;
@@ -556,7 +559,7 @@ function eachName(list, fn){
     return r===undefined || r===s ? val : r;
   };
   (D[list]||[]).forEach(r => {
-    const where = list==="tt" ? (TT_EVENTS[r.event]||r.event||"") : list==="chess" && r.group ? `Group ${r.group}` : "";
+    const where = list==="tt"||list==="badminton" ? (TT_EVENTS[r.event]||r.event||"") : list==="chess" && r.group ? `Group ${r.group}` : "";
     ["a","b"].forEach(k => { if(r[k]!=null){ const v = visit(r[k], {match:true, where}); if(v!==r[k]) r[k] = v; } });
     if(list==="tt" && r.ref!=null){ const v = visit(r.ref, {where:"Referee"}); if(v!==r.ref) r.ref = v; }
   });
@@ -601,7 +604,7 @@ function viewTeams(){
   const cards = shown.map(x => `<div class="nrow"><div class="nline"><input class="nin" value="${esc(x.name)}" data-orig="${esc(x.name)}" aria-label="Name: ${esc(x.name)}" autocomplete="off" spellcheck="false"><button class="btn small primary" type="button" data-rename="${esc(x.key)}" disabled>Save</button></div>${
       nameMsg && nameMsg.key===x.key ? `<small class="nmsg ok">✓ ${esc(nameMsg.text)}</small>` : `<small class="nmsg muted">${esc(meta(x))}</small>${twice(x)}`}</div>`).join("");
   const scope = {tt:"every match and referee slot", carrom:"the team list and every match", chess:"the groups and every match"}[nameSport] || "the team lists and every match";
-  const empty = !names.length ? `No names yet. Add ${S.p==="Team"?"teams":"players"} below${nameSport==="tt"?" or under Fixtures":""}.` : "No names match that search.";
+  const empty = !names.length ? `No names yet. Add ${S.p==="Team"?"teams":"players"} below${nameSport==="tt"||nameSport==="badminton"?" or under Fixtures":""}.` : "No names match that search.";
   let roster = "";
   if(teamSport==="cricket" || teamSport==="volleyball"){
     roster = `<h3>Add or remove players and teams</h3>
@@ -800,7 +803,7 @@ document.addEventListener("click", async e => {
   if(t.id==="addRow"){
     const S = FIX[fixSport], last = D[fixSport][D[fixSport].length-1] || {};
     const r = {};
-    S.cols.forEach(([k,,type])=>{ if(k==="winner"||k==="result") return; r[k] = k==="date" ? (last.date||todayISO) : Array.isArray(type) ? (last[k]||type[0]) : ""; });
+    S.cols.forEach(([k,,type])=>{ if(k==="winner"||k==="result") return; r[k] = k==="date" ? (last.date||(fixSport==="badminton"?"2026-12-06":todayISO)) : Array.isArray(type) ? (last[k]||type[0]) : ""; });
     D[fixSport].push(r); filterText = ""; render();
     const inputs = document.querySelectorAll("tbody tr:last-child input"); inputs[0]?.focus(); inputs[0]?.scrollIntoView({block:"center"});
     return;

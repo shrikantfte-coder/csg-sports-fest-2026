@@ -7,10 +7,13 @@ const SPORTS = [
   {id:"chess", key:"chess", list:"chess", name:"Chess", c:"--chess"},
   {id:"cricket", key:"cricket", list:"cricketFixtures", name:"Cricket", c:"--cricket"},
   {id:"volleyball", key:"volleyball", list:"volleyballFixtures", name:"Volleyball", c:"--volley"},
+  {id:"badminton", key:"badminton", list:"badminton", name:"Badminton", c:"--badminton"},
 ];
 const OFFICE = "CSG Office premises";
 const CRICKET_MAP = "https://maps.app.goo.gl/8DuRAhPuMddGuS2p8";
 const VOLLEY_MAP = "https://maps.app.goo.gl/tTLeYtSKwnfJVtUPA";
+const BADMINTON_VENUE = "Invictus Sports Arena, near Yeshwantpur";
+const BADMINTON_DATE = "2026-12-06";   // shown until badminton fixtures (which carry their own dates) are added
 const TT_EVENTS = {MS:"Men's Singles", WS:"Women's Singles", MD:"Men's Doubles", WD:"Women's Doubles"};
 const CARROM_ROUNDS = {R1:"Round 1", R2:"Round 2", R3:"Round 3", RR:"Round Robin", FINAL:"Final"};
 const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>';
@@ -42,6 +45,7 @@ function buildMatches(){
   L.carrom.forEach(r => push(r, {sport:"carrom", time:r.time, id:r.id, tag:r.round, label:CARROM_ROUNDS[r.round]||r.round}));
   L.chess.forEach(r => push(r, {sport:"chess", time:slotStart(r.slot), slot:r.slot, id:r.no?`#${r.no}`:"", tag:r.group?`Grp ${r.group}`:(r.round||""), group:r.group, round:r.round, board:r.board,
     label: r.group ? `Group ${r.group} · ${r.round} · Board ${r.board}` : (r.b ? `${r.round||"Knock-out"}${r.board?` · Board ${r.board}`:""}` : "Tie-breaks")}));
+  L.badminton.forEach(r => { const stage = r.stage || "League"; push(r, {sport:"badminton", time:r.time, id:r.id, tag:r.event, stage, label:(TT_EVENTS[r.event]||r.event)+(stage!=="League"?` · ${stage}`:"")}); });
   [["cricket","cricketFixtures"],["volleyball","volleyballFixtures"]].forEach(([k,f]) => L[f].forEach(r => push(r, {sport:k, time:r.time, id:r.id, tag:r.stage, stage:r.stage, label:r.stage})));
   MATCHES.sort(byTime);
 }
@@ -66,7 +70,7 @@ function matchRow(m, q, opts={}){
   const when = opts.withDate ? `${esc(m.time)}<small>${fmtDay(m.date)}</small>` : `${esc(m.time)}${m.end?`<small>to ${esc(m.end)}</small>`:""}`;
   const vs = m.b ? `${sideHTML(m,"a",q)}<i>vs</i>${sideHTML(m,"b",q)}${decided(m)&&m.winner==="draw"?' <b class="dtag">Draw</b>':""}` : `<span class="tbd">${esc(m.a)}</span>`;
   const tag = opts.withSport ? sp.name : m.tag;
-  const stage = m.sport==="tt" && m.stage && m.stage!=="League" ? ` · ${esc(m.stage)}` : "";
+  const stage = (m.sport==="tt"||m.sport==="badminton") && m.stage && m.stage!=="League" ? ` · ${esc(m.stage)}` : "";
   const sub = opts.withSport ? `${esc(m.label||"")}${m.id?" · "+esc(m.id):""}` : `${esc(m.id)}${stage}${m.board?(/^\d/.test(m.board)?` · Board ${esc(m.board)}`:` · ${esc(m.board)}`):""}`;
   let out = "";
   if(opts.person && !opts.asRef && decided(m)){
@@ -198,19 +202,36 @@ function viewVolley(){
   ${teamSportBody("volleyball","volleyballFixtures",teams,D.volleyball.map(t=>t.name))}
   ${qrBlock("volleyball","Volleyball")}`;
 }
+function viewBadminton(){
+  const ev = filter.badminton || "all";
+  const all = MATCHES.filter(m=>m.sport==="badminton");
+  const list = all.filter(m=>ev==="all"||m.tag===ev);
+  const chips = ["all","MS","WS","MD","WD"].map(k=>`<button class="chip" data-f="badminton" data-v="${k}" aria-pressed="${ev===k}">${k==="all"?"All events":TT_EVENTS[k]}</button>`).join("");
+  const players = {};
+  D.badminton.forEach(r => [r.a,r.b].forEach(p => { if(p && !isTBD(p)) (players[r.event] ||= new Set()).add(p); }));
+  const teams = ["MS","WS","MD","WD"].filter(k=>players[k]).map(k=>`<div class="team"><h4>${TT_EVENTS[k]}<small>${players[k].size} ${k.endsWith("D")?"pairs":"players"}</small></h4><ul>${[...players[k]].sort((a,b)=>a.localeCompare(b)).map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`).join("");
+  const body = all.length
+    ? `<section class="sec"><div class="sec-h"><h3>Fixtures</h3><span>${all.length} matches</span></div><div class="chips">${chips}</div>${dayBlocks(list)}</section>${teams?`<section class="sec"><div class="sec-h"><h3>Players &amp; pairs</h3></div><div class="grid">${teams}</div></section>`:""}`
+    : `<div class="soon"><h3>Fixtures coming soon</h3><p>Match times and players will be posted here once they are ready.</p></div>`;
+  return `
+  <div class="hero"><div class="eyebrow">Singles &amp; doubles${all.length?` · ${all.length} matches`:""}</div><h2>Badminton</h2>${champs("badminton")}
+    <div class="facts">${fact("Venue",BADMINTON_VENUE)}${fact("Date",all.length?dateRange("badminton"):fmtDay(BADMINTON_DATE))}${fact("Events","Men's &amp; Women's Singles and Doubles")}</div></div>
+  ${body}
+  ${qrBlock("badminton","Badminton")}`;
+}
 function viewAll(){
   const upcoming = MATCHES.filter(m=>m.date && m.date>=todayISO);
   const nextDay = upcoming.length ? upcoming[0].date : null;
   const dayList = nextDay ? upcoming.filter(m=>m.date===nextDay) : [];
   const recent = MATCHES.filter(decided).sort((x,y)=>byTime(y,x)).slice(0,8);
   const timing = {tt:"from 5:30 PM", carrom:"5:00 – 7:00 PM", chess:"4:00 – 6:30 PM"};
-  const venue = {tt:OFFICE, carrom:OFFICE, chess:OFFICE, cricket:"Invictus Sports Arena, Hesarghatta Rd", volleyball:"Volleyball ground"};
+  const venue = {tt:OFFICE, carrom:OFFICE, chess:OFFICE, cricket:"Invictus Sports Arena, Hesarghatta Rd", volleyball:"Volleyball ground", badminton:BADMINTON_VENUE};
   const cards = SPORTS.map(s=>{
     const ms = MATCHES.filter(m=>m.sport===s.key), done = ms.filter(decided).length;
     const champ = R.champions.filter(c=>c.key===s.list).map(c=>`<span class="champ-line">${TROPHY}${c.event?esc(c.event)+": ":""}${esc(titleCase(c.name))}</span>`).join("");
     const count = s.key==="chess" ? `${Object.values(D.chessGroups).reduce((n,p)=>n+p.length,0)} players` : s.key==="carrom" ? `${D.carromTeams.length} teams` : s.key==="cricket" ? `${D.cricket.length} teams` : s.key==="volleyball" ? `${D.volleyball.length} teams` : "";
     const st = !ms.length ? "Fixtures coming soon" : done===ms.length ? "Completed" : done ? `${done} of ${ms.length} results in` : "Fixtures out";
-    const when = ms.length ? `${dateRange(s.key)}${timing[s.key]?" · "+timing[s.key]:""}` : "Dates to be announced";
+    const when = ms.length ? `${dateRange(s.key)}${timing[s.key]?" · "+timing[s.key]:""}` : s.key==="badminton" ? fmtDay(BADMINTON_DATE) : "Dates to be announced";
     return `<a class="card" href="#${s.id}" style="--c:var(${s.c})"><span class="st">${st}</span><h3>${s.name}</h3>${champ}<p>${when}<br>${venue[s.key]}<br>${[count, ms.length?`${ms.length} matches`:""].filter(Boolean).join(" · ")}</p><span class="go">View ${ms.length?"fixtures":"teams & venue"} →</span></a>`;
   }).join("");
   const qrs = [{id:"",name:"All sports",c:"--all"},...SPORTS].map(s=>`<div class="qr" style="--c:var(${s.c})"><div class="code"><img src="qr/qr-${s.id||"all"}.png" alt="QR code for ${esc(s.name)}" width="150" height="150"></div><b>${s.name}</b><button class="copy" type="button" data-copy="${esc(pageURL(s.id))}">Copy link</button></div>`).join("");
@@ -238,6 +259,10 @@ function buildPeople(){
     const ev = TT_EVENTS[r.event]||r.event, dbl = String(r.event).endsWith("D");
     [r.a,r.b].forEach(n=>add(n,{sport:"tt",text:`Table Tennis · ${ev}${dbl?" (team)":""}`}));
     if(r.ref) add(r.ref,{sport:"tt",text:"Table Tennis · Referee"});
+  });
+  D.badminton.forEach(r=>{
+    const ev = TT_EVENTS[r.event]||r.event, dbl = String(r.event).endsWith("D");
+    [r.a,r.b].forEach(n=>add(n,{sport:"badminton",text:`Badminton · ${ev}${dbl?" (team)":""}`}));
   });
   D.carromTeams.forEach(t=>add(t.name,{sport:"carrom",text:`Carrom · Team ${pad(t.no)}`}));
   Object.entries(D.chessGroups).forEach(([g,ps])=>ps.forEach(n=>add(n,{sport:"chess",text:`Chess · Group ${g}`})));
@@ -268,7 +293,7 @@ function viewSearch(raw){
 }
 
 /* ---------- Router ---------- */
-const VIEWS = {"":viewAll,"table-tennis":viewTT,carrom:viewCarrom,chess:viewChess,cricket:viewCricket,volleyball:viewVolley};
+const VIEWS = {"":viewAll,"table-tennis":viewTT,carrom:viewCarrom,chess:viewChess,cricket:viewCricket,volleyball:viewVolley,badminton:viewBadminton};
 function current(){ const h = location.hash.replace("#",""); return h in VIEWS ? h : ""; }
 function render(){
   if(!D) return;

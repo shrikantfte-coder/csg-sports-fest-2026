@@ -6,16 +6,17 @@
 window.Fest = (() => {
   const norm = s => String(s ?? "").toLowerCase().replace(/[^\p{L}\p{N}\p{M}]/gu, "").replace(/h/g, "");
   const isTBD = s => /^(winner of|loser of|1st in|2nd in|3rd in|4th in)\b/i.test(String(s ?? "").trim());
-  const LISTS = ["tt", "carrom", "chess", "cricketFixtures", "volleyballFixtures"];
+  const LISTS = ["tt", "carrom", "chess", "cricketFixtures", "volleyballFixtures", "badminton"];
   const POINTS = {
     tt: { w: 1, d: 0, l: 0 },
     carrom: { w: 2, d: 1, l: 0 },
     chess: { w: 1, d: 0.5, l: 0 },
     cricketFixtures: { w: 2, d: 1, l: 0 },
     volleyballFixtures: { w: 2, d: 0, l: 0 },
+    badminton: { w: 1, d: 0, l: 0 },
   };
   const idOf = (key, r) => key === "chess" ? String(r.no ?? "") : String(r.id ?? "");
-  const stageOf = (key, r) => String((key === "tt" ? (r.stage || "League") : key === "carrom" || key === "chess" ? r.round : r.stage) || "").trim();
+  const stageOf = (key, r) => String((key === "tt" || key === "badminton" ? (r.stage || "League") : key === "carrom" || key === "chess" ? r.round : r.stage) || "").trim();
   const isFinal = (key, r) => /^final$/i.test(stageOf(key, r));
   const isKnockout = (key, r) => /final|semi|quarter|knock|qualif|elimin|^r\d$|^sf$|^qf$/i.test(stageOf(key, r)) && !/^rr$|round robin/i.test(stageOf(key, r));
   const isRR = (key, r) => key === "carrom" && /^(rr|round robin)$/i.test(stageOf(key, r));
@@ -102,7 +103,7 @@ window.Fest = (() => {
     const champions = [];
     LISTS.forEach(key => lists[key].forEach(r => {
       if (isFinal(key, r) && decided(r) && r.winner !== "draw") {
-        champions.push({ key, event: key === "tt" ? r.event : "", name: r.winner === "a" ? r.A : r.B });
+        champions.push({ key, event: key === "tt" || key === "badminton" ? r.event : "", name: r.winner === "a" ? r.A : r.B });
       }
     }));
     return { lists, rr, champions };
