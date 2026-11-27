@@ -14,6 +14,7 @@ const CRICKET_MAP = "https://maps.app.goo.gl/8DuRAhPuMddGuS2p8";
 const VOLLEY_MAP = "https://maps.app.goo.gl/tTLeYtSKwnfJVtUPA";
 const BADMINTON_VENUE = "Invictus Sports Arena, near Yeshwantpur";
 const BADMINTON_DATE = "2026-12-06";   // shown until badminton fixtures (which carry their own dates) are added
+const LOGOS = {cricket:{"Tech Tigers":"tech-tigers","Thunder Strikers":"thunder-strikers","Royal Challengers":"royal-challengers","Avengers":"avengers","Royal Riders":"royal-riders","Rising Learners":"rising-learners"}};
 const TT_EVENTS = {MS:"Men's Singles", WS:"Women's Singles", MD:"Men's Doubles", WD:"Women's Doubles"};
 const CARROM_ROUNDS = {R1:"Round 1", R2:"Round 2", R3:"Round 3", RR:"Round Robin", FINAL:"Final"};
 const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>';
@@ -24,6 +25,8 @@ const pad = n => String(n).padStart(2,"0");
 const todayISO = (()=>{const d=new Date();return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`})();
 const fmtDay = iso => { if(!iso) return "Date to be set"; const d=new Date(iso+"T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}); };
 const norm = Fest.norm, isTBD = Fest.isTBD;
+const LOGO_BY = Object.fromEntries(Object.entries(LOGOS).map(([sp,m])=>[sp,Object.fromEntries(Object.entries(m).map(([n,f])=>[norm(n),`logos/${sp}-${f}.jpg`]))]));
+const logo = (sport, name, cls="tlogo") => { const src = LOGO_BY[sport]?.[norm(name)]; return src ? `<img class="${cls}" src="${src}" alt="" loading="lazy">` : ""; };
 const titleCase = s => String(s ?? "").replace(/(^|\s)([a-z])/g, (m,p,c)=>p+c.toUpperCase());
 const sportBy = k => SPORTS.find(s=>s.key===k||s.id===k||s.list===k);
 const pageURL = id => BASE + (id ? "#"+id : "");
@@ -59,7 +62,7 @@ function sideHTML(m, s, q){
   const n = m[s];
   if(isTBD(n)) return `<span class="tbd">${esc(n)}</span>`;
   const d = decided(m), won = d && m.winner===s, lost = d && m.winner!=="draw" && m.winner!==s;
-  return `<span class="${won?"won":lost?"lost":""}">${hl(n,q)}${won?' <b class="wtag">Won</b>':""}</span>`;
+  return `<span class="${won?"won":lost?"lost":""}">${logo(m.sport,n)}${hl(n,q)}${won?' <b class="wtag">Won</b>':""}</span>`;
 }
 function sideOf(p, m){
   for(const s of ["a","b"]){ const k = norm(m[s]); if(k && (p.key===k || p.teams.has(`${m.sport}:${k}`))) return s; }
@@ -187,7 +190,7 @@ function teamSportBody(sport, list, teamsHTML, teamNames){
   return `<section class="sec"><div class="sec-h"><h3>Fixtures</h3><span>${all.length} matches</span></div>${dayBlocks(all)}</section>${table}${teamsHTML}`;
 }
 function viewCricket(){
-  const teams = `<section class="sec"><div class="sec-h"><h3>Teams</h3><span>From the player auction</span></div><div class="grid">${D.cricket.map(t=>`<div class="team"><h4>${esc(t.name)}<small>${t.players.length} players</small></h4><ol>${t.players.map(p=>`<li>${esc(p)}</li>`).join("")}</ol></div>`).join("")}</div></section>`;
+  const teams = `<section class="sec"><div class="sec-h"><h3>Teams</h3><span>From the player auction</span></div><div class="grid">${D.cricket.map(t=>`<div class="team"><h4>${logo("cricket",t.name,"tlogo big")}${esc(t.name)}<small>${t.players.length} players</small></h4><ol>${t.players.map(p=>`<li>${esc(p)}</li>`).join("")}</ol></div>`).join("")}</div></section>`;
   return `
   <div class="hero"><div class="eyebrow">${D.cricket.length} teams</div><h2>Cricket</h2>${champs("cricketFixtures")}
     <div class="facts">${fact("Venue",`Invictus Sports Arena<br><span style="color:var(--muted);font-size:.9rem">#118 Chikkabanavara, North, Hesarghatta Rd, Chikkabanavara, Karnataka 560090</span><br>${mapLink(CRICKET_MAP)}`)}${fact("Dates",dateRange("cricket"))}</div></div>
