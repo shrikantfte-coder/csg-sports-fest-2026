@@ -12,7 +12,8 @@ const SPORTS = [
 const OFFICE = "CSG Office premises";
 const CRICKET_MAP = "https://maps.app.goo.gl/8DuRAhPuMddGuS2p8";
 const VOLLEY_MAP = "https://maps.app.goo.gl/tTLeYtSKwnfJVtUPA";
-const BADMINTON_VENUE = "Invictus Sports Arena, near Yeshwantpur";
+const BADMINTON_VENUE = "Eagles Sports Arena";
+const BADMINTON_MAP = "https://share.google/eJTKSAFJtYS2CLWsr";
 const BADMINTON_DATE = "2026-12-06";   // shown until badminton fixtures (which carry their own dates) are added
 const LOGOS = {cricket:{"Tech Tigers":"tech-tigers","Thunder Strikers":"thunder-strikers","Royal Challengers":"royal-challengers","Avengers":"avengers","Royal Riders":"royal-riders","Rising Learners":"rising-learners"}};
 const TT_EVENTS = {MS:"Men's Singles", WS:"Women's Singles", MD:"Men's Doubles", WD:"Women's Doubles"};
@@ -218,7 +219,7 @@ function viewBadminton(){
     : `<div class="soon"><h3>Fixtures coming soon</h3><p>Match times and players will be posted here once they are ready.</p></div>`;
   return `
   <div class="hero"><div class="eyebrow">Singles &amp; doubles${all.length?` · ${all.length} matches`:""}</div><h2>Badminton</h2>${champs("badminton")}
-    <div class="facts">${fact("Venue",BADMINTON_VENUE)}${fact("Date",all.length?dateRange("badminton"):fmtDay(BADMINTON_DATE))}${fact("Events","Men's &amp; Women's Singles and Doubles")}</div></div>
+    <div class="facts">${fact("Venue",`${BADMINTON_VENUE}<br>${mapLink(BADMINTON_MAP)}`)}${fact("Date",all.length?dateRange("badminton"):fmtDay(BADMINTON_DATE))}${fact("Events","Men's &amp; Women's Singles and Doubles")}</div></div>
   ${body}
   ${qrBlock("badminton","Badminton")}`;
 }
